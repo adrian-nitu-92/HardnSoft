@@ -51,12 +51,11 @@ class ChartsDataThread(threading.Thread):
     self.request.wfile.write(message)
 
 class PutDataThread(threading.Thread):
-  def __init__(self, request, data, time, methodUpdate, methodClear, structure):
+  def __init__(self, request, data, time, methodUpdate, structure):
     threading.Thread.__init__(self)
     self.request = request
     self.data = data
     self.methodUpdate = methodUpdate
-    self.methodClear = methodClear
     self.structure = structure
     self.time = time
 
@@ -99,23 +98,43 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     url = self.path
     parsed = urlparse.urlparse(url)
     if string.find(self.path, "/putHeartRate") != -1:
-      print "call putHartRate"
+      print "call putHeartRate"
       value = float(urlparse.parse_qs(parsed.query)['value'][0])
       time = float(urlparse.parse_qs(parsed.query)['time'][0])
       t = PutDataThread(self, value, time, 
-        structure.addHartRate, structure.clearHartRate,
+        structure.addHartRate,
         structure)
       t.start()
       t.join()
       return
 
     if string.find(self.path, "/putNumSteps") != -1:
-      print "call putHartRate"
+      print "call putNumSteps"
       value = float(urlparse.parse_qs(parsed.query)['value'][0])
       time = float(urlparse.parse_qs(parsed.query)['time'][0])
       t = PutDataThread(self, value, time, 
-        structure.addNumSteps, structure.clearNumSteps, 
+        structure.addNumSteps, 
         structure)
+      t.start()
+      t.join()
+      return
+
+    if string.find(self.path, "/putTemperature") != -1:
+      print "call putTemperature"
+      value = float(urlparse.parse_qs(parsed.query)['value'][0])
+      time = float(urlparse.parse_qs(parsed.query)['time'][0])
+      t = PutDataThread(self, value, time, 
+        structure.addTemperature, structure)
+      t.start()
+      t.join()
+      return
+
+    if string.find(self.path, "/putHumidity") != -1:
+      print "call putHumidity"
+      value = float(urlparse.parse_qs(parsed.query)['value'][0])
+      time = float(urlparse.parse_qs(parsed.query)['time'][0])
+      t = PutDataThread(self, value, time, 
+        structure.addHumidity, structure)
       t.start()
       t.join()
       return

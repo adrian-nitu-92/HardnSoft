@@ -12,26 +12,6 @@ HOST_NAME = '192.168.1.132' # !!!REMEMBER TO CHANGE THIS!!!
 PORT_NUMBER = 9000 # Maybe set this to 9000.
 structure = Structure()
 
-class PutDataThread(threading.Thread):
-  def __init__(self, request, data, time, methodUpdate, structure):
-    threading.Thread.__init__(self)
-    self.request = request
-    self.data = data
-    self.methodUpdate = methodUpdate
-    self.structure = structure
-    self.time = time
-
-  def run(self):
-    self.methodUpdate(self.time, self.data)
-    self.sendResponse(200, "")
-
-  def sendResponse(self, code, message):
-    self.request.send_response(code)
-    self.request.send_header("Content-type", "text")
-    self.request.end_headers()
-    self.request.wfile.write(message)
-    print message
-
 class MyHandler(BaseHTTPRequestHandler):
   def sendResponse(self, request, code, message):
     request.send_response(code)
@@ -53,8 +33,9 @@ class MyHandler(BaseHTTPRequestHandler):
 
     if self.path == "/getChartsData":
       try:
-        self.sendResponse(self, 200, structure.toString())
-        structure.clear()
+        m = structure.toString()
+        print "-------------------------",m, "-------------" 
+        self.sendResponse(self, 200, m)
       except:
         self.sendResponse(self, 400, "")
         traceback.print_exc(file=sys.stdout)
@@ -84,7 +65,7 @@ class MyHandler(BaseHTTPRequestHandler):
         traceback.print_exc(file=sys.stdout)
       return
 
-    if string.find(self.path, "/putTemperature") != -1:
+    if string.find(self.path, "/putAirTemperature") != -1:
       try:
         value = float(urlparse.parse_qs(parsed.query)['value'][0])
         time = float(urlparse.parse_qs(parsed.query)['time'][0])
@@ -109,18 +90,25 @@ class MyHandler(BaseHTTPRequestHandler):
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
   """Handle requests in a separate thread."""
 
+isRunning = True
+
+#./ngrok authtoken 25qDk5zVyA9FYfhf1bHq9_5eUvKuH647BZZsHBRvR3f
+#./ngrok http -subdomain=randomtest 9999
 if __name__ == '__main__':
+  structure.clearLog()
   if len(sys.argv) == 2:
     PORT_NUMBER = int(sys.argv[1])
   if len(sys.argv) == 3:
     HOST_NAME = sys.argv[1]
     PORT_NUMBER = int(sys.argv[2])
+  #LogData()
   httpd = ThreadedHTTPServer((HOST_NAME, PORT_NUMBER), MyHandler)
   print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
   try:
-      httpd.serve_forever()
+    httpd.serve_forever()
   except KeyboardInterrupt:
-      pass
+    isRunning = False
   httpd.server_close()
+  structure.logTreasure()
   print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
 

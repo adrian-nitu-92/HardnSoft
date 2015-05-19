@@ -1,0 +1,25 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="buc1.probulator.StepsFragment"
+    android:gravity="center">
+
+    <RelativeLayout
+        android:id="@+id/steps_number_field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/FieldRelativeLayout">
+
+        <TextView
+            android:text="Label"
+            android:id="@+id/steps_number_label"
+            style="@style/LabelTextView"/>
+
+        <TextView
+            android:id="@+id/steps_number_value"
+            android:text="Value"
+            style="@style/ValueTextView"/>
+    </RelativeLayout>
+
+</RelativeLayout>

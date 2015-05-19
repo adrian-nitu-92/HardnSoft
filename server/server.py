@@ -19,12 +19,9 @@ class MyThread(threading.Thread):
     self.message = message
 
   def run(self):
-    print "Start execute thread"
     self.sendResponse()
-    print "End Thread"
 
   def sendResponse(self):
-    print "... ", self.request.path
     self.request.send_response(self.code)
     self.request.send_header("Content-type", "text/html")
     self.request.end_headers()
@@ -38,13 +35,10 @@ class ChartsDataThread(threading.Thread):
     self.structure = structure
 
   def run(self):
-    print "Start ChartsDataThread"
     self.sendResponse(200, self.structure.toString())
     self.structure.clear()
-    print "End Thread"
 
   def sendResponse(self, code, message):
-    print "... ", self.request.path
     self.request.send_response(code)
     self.request.send_header("Content-type", "text")
     self.request.end_headers()
@@ -60,36 +54,29 @@ class PutDataThread(threading.Thread):
     self.time = time
 
   def run(self):
-    print "Start ChartsDataThread"
     self.methodUpdate(self.time, self.data)
     self.sendResponse(200, "")
-    print "##############33", self.structure.toString()
-    print "End Thread"
 
   def sendResponse(self, code, message):
-    print "... ", self.request.path
     self.request.send_response(code)
     self.request.send_header("Content-type", "text")
     self.request.end_headers()
     self.request.wfile.write(message)
+    print message
 
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   def do_HEAD(self):
     pass
   def do_GET(self):
     """Respond to a GET request."""
-
-    print "GET REQUEST"
-    print self.path
+    print "GET REQUEST: ", self.path
     if self.path == "/hello":
-      print "call hello handler"
       t = MyThread(self, 200, "my message")
       t.start()
       t.join()
       return
 
     if self.path == "/getChartsData":
-      print "call getChartsData"
       t = ChartsDataThread(self, structure)
       t.start()
       t.join()
@@ -98,7 +85,6 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     url = self.path
     parsed = urlparse.urlparse(url)
     if string.find(self.path, "/putHeartRate") != -1:
-      print "call putHeartRate"
       value = float(urlparse.parse_qs(parsed.query)['value'][0])
       time = float(urlparse.parse_qs(parsed.query)['time'][0])
       t = PutDataThread(self, value, time, 
@@ -109,7 +95,6 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       return
 
     if string.find(self.path, "/putNumSteps") != -1:
-      print "call putNumSteps"
       value = float(urlparse.parse_qs(parsed.query)['value'][0])
       time = float(urlparse.parse_qs(parsed.query)['time'][0])
       t = PutDataThread(self, value, time, 
@@ -120,7 +105,6 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       return
 
     if string.find(self.path, "/putTemperature") != -1:
-      print "call putTemperature"
       value = float(urlparse.parse_qs(parsed.query)['value'][0])
       time = float(urlparse.parse_qs(parsed.query)['time'][0])
       t = PutDataThread(self, value, time, 
@@ -130,7 +114,6 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       return
 
     if string.find(self.path, "/putHumidity") != -1:
-      print "call putHumidity"
       value = float(urlparse.parse_qs(parsed.query)['value'][0])
       time = float(urlparse.parse_qs(parsed.query)['time'][0])
       t = PutDataThread(self, value, time, 
@@ -142,6 +125,9 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 if __name__ == '__main__':
   if len(sys.argv) == 2:
     PORT_NUMBER = int(sys.argv[1])
+  if len(sys.argv) == 3:
+    HOST_NAME = sys.argv[1]
+    PORT_NUMBER = int(sys.argv[2])
   server_class = BaseHTTPServer.HTTPServer
   httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
   print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)

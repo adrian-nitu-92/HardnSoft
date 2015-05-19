@@ -32,16 +32,12 @@ class MyThread(threading.Thread):
 
 if __name__ == '__main__':
   print len(sys.argv)
-  if len(sys.argv) == 2:
-    PORT_NUMBER = int(sys.argv[1])
-  if len(sys.argv) == 3:
-    HOST_NAME = sys.argv[1]
-    PORT_NUMBER = int(sys.argv[2])
+  ROOT = sys.argv[1]
 
-  if len(sys.argv) == 4:
-    ROOT = sys.argv[1]
-  else:
-    ROOT = HOST_NAME + ":" + str(PORT_NUMBER)
+#  ROOT = socket.gethostbyname(HOST_NAME)
+#  ROOT = ROOT
+# + ":" + str(PORT_NUMBER)
+  print ROOT
 
   while True:
     for i in xrange(10):

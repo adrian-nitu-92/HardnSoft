@@ -89,6 +89,8 @@ class MyHandler(BaseHTTPRequestHandler):
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
   """Handle requests in a separate thread."""
 
+#./ngrok authtoken 25qDk5zVyA9FYfhf1bHq9_5eUvKuH647BZZsHBRvR3f
+#./ngrok http -subdomain=randomtest 9999
 if __name__ == '__main__':
   if len(sys.argv) == 2:
     PORT_NUMBER = int(sys.argv[1])

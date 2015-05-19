@@ -31,6 +31,8 @@ class MyThread(threading.Thread):
     res = conn.getresponse()
     conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time()))
     res = conn.getresponse()
+    conn.request("GET","/putAirTemperature?value="+str(randint(-100,100))+"&time="+str(time.time()))
+    res = conn.getresponse()
     #if self.id == 5 or self.id == 7:
     #  conn.request("GET","/getChartsData")
     #  res = conn.getresponse()

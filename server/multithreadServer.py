@@ -33,7 +33,9 @@ class MyHandler(BaseHTTPRequestHandler):
 
     if self.path == "/getChartsData":
       try:
-        self.sendResponse(self, 200, structure.toString())
+        m = structure.toString()
+        print "-------------------------",m, "-------------" 
+        self.sendResponse(self, 200, m)
       except:
         self.sendResponse(self, 400, "")
         traceback.print_exc(file=sys.stdout)
@@ -89,22 +91,17 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
   """Handle requests in a separate thread."""
 
 isRunning = True
-# ar trebui ca din 2 in 2 secunde sa se actualizeze logul
-def LogData():
-  if isRunning:
-    #nu e bine:o sa scriu mereu date duplicate si nu vreau asta
-    structure.logData()
-    threading.Timer(10, LogData).start()
 
 #./ngrok authtoken 25qDk5zVyA9FYfhf1bHq9_5eUvKuH647BZZsHBRvR3f
 #./ngrok http -subdomain=randomtest 9999
 if __name__ == '__main__':
+  structure.clearLog()
   if len(sys.argv) == 2:
     PORT_NUMBER = int(sys.argv[1])
   if len(sys.argv) == 3:
     HOST_NAME = sys.argv[1]
     PORT_NUMBER = int(sys.argv[2])
-  LogData()
+  #LogData()
   httpd = ThreadedHTTPServer((HOST_NAME, PORT_NUMBER), MyHandler)
   print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
   try:
@@ -112,7 +109,6 @@ if __name__ == '__main__':
   except KeyboardInterrupt:
     isRunning = False
   httpd.server_close()
-  #time.sleep(5)
-  structure.clearLog()  
+  structure.logTreasure()
   print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
 

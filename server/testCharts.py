@@ -33,15 +33,12 @@ trace2 = Scatter(
 )
 
 data = Data([trace1])
-data2 = Data([trace2])
 
 # Add title to layout object
 layout = Layout(title='Time Series')
-layout2 = Layout(title='Mirror')
 
 # Make a figure object
 fig = Figure(data=data, layout=layout)
-fig2 = Figure(data=data2, layout=layout2)
 
 # (@) Send fig to Plotly, initialize streaming plot, open new tab
 unique_url = py.plot(fig, filename='s7_first-stream')
@@ -58,6 +55,5 @@ while True:
   x += 1
   y = randint(2,9)
   s.write(dict(x=x, y=y))
-  s.write(dict(x=-x, y=y))
   time.sleep(0.5)
 s.close()

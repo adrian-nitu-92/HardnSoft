@@ -1,0 +1,25 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="buc1.probulator.AirTemperatureFragment">
+
+    <RelativeLayout
+        android:gravity="center"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:id="@+id/air_temperature_chart_container"
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="300dp"
+            android:gravity="center">
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

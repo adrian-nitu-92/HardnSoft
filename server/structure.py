@@ -2,6 +2,7 @@ import time
 from threading import Thread, Lock
 import os
 
+
 class Treasure:
   def __init__(self, timestamp, checkpoint, value, name):
     self.timestamp = timestamp
@@ -10,7 +11,7 @@ class Treasure:
     self.name = name
 
   def toString(self):
-    message = str(self.timestamp) + " " + self.checkpoint + " " + str(self.value) + " " + self.name
+    message = str(self.timestamp) + " " + str(self.checkpoint) + " " + str(self.value) + " " + self.name
     return message
 
 #This class is thread safe
@@ -29,14 +30,62 @@ class Structure:
     self.humidity = []
     self.mutexHumidity = Lock()
 
+    self.bodyTemperature = []
+    self.mutexBodyTemperature = Lock()
+
+    self.consumption = []
+    self.mutexConsumption = Lock()
+
+    self.distance = []
+    self.mutexDistance = Lock()
+
     self.treasure = []
     self.pertmanentTreasure = []
     self.mutexTreasure = Lock()
 
+  def getHumidity(self):
+    self.mutexHumidity.acquire()
+    l = self.humidity
+    self.mutexHumidity.release()
+    return l
+
+  def getTemperature(self):
+    self.mutexTemperature.acquire()
+    l = self.temperature
+    self.mutexTemperature.release()
+    return l
+
+  def getNumSteps(self):
+    self.mutexNumSteps.acquire()
+    l = self.numSteps
+    self.mutexNumSteps.release()
+    return l
+
+  def getHartRate(self):
+    self.mutexHartRate.acquire()
+    l = self.hartRate
+    self.mutexHartRate.release()
+    return l
+
   def addTreasure(self, time, checkpoint, value, name):
     self.mutexTreasure.acquire()
-    self.treasure.append([Treasure(time, checkpoint, value, name)])
+    self.treasure.append(Treasure(time, checkpoint, value, name))
     self.mutexTreasure.release()
+
+  def addDistance(self, time, value):
+    self.mutexDistance.acquire()
+    self.distance.append([time, value])
+    self.mutexDistance.release()
+
+  def addConsumption(self, time, value):
+    self.mutexConsumption.acquire()
+    self.consumption.append([time, value])
+    self.mutexConsumption.release()
+  
+  def addBodyTemperature(self, time, value):
+    self.mutexBodyTemperature.acquire()
+    self.bodyTemperature.append([time, value])
+    self.mutexBodyTemperature.release()
 
   def addHartRate(self, time, value):
     self.mutexHartRate.acquire()
@@ -61,6 +110,21 @@ class Structure:
     self.mutexHumidity.acquire()
     self.humidity.append([time, value])
     self.mutexHumidity.release()
+
+  def clearDistance(self):
+    self.mutexDistance.acquire()
+    self.distance = []
+    self.mutexDistance.release()
+
+  def clearConsumption(self):
+    self.mutexConsumption.acquire()
+    self.consumption = []
+    self.mutexConsumption.release()
+  
+  def clearBodyTemperature(self):
+    self.mutexBodyTemperature.acquire()
+    self.bodyTemperature = []
+    self.mutexBodyTemperature.release()
 
   def clearTreasure(self):
     self.mutexTreasure.acquire()
@@ -92,10 +156,13 @@ class Structure:
   def clear(self):
     self.logData()
     self.clearHartRate()
-    self.clearNumSteps()
+    #self.clearNumSteps()
     self.clearTemperature()
     self.clearHumidity()
     self.clearTreasure()
+    self.clearBodyTemperature()
+    self.clearConsumption()
+    self.clearDistance()
 
   def toString(self):
     # adaugam hartRate:
@@ -117,6 +184,18 @@ class Structure:
     message += self._toStringTreasure("treasure",
       self.treasure,
       self.mutexTreasure)
+    #adaugam body temperature: 
+    message += self._toString("bodytemperature",
+      self.bodyTemperature,
+      self.mutexBodyTemperature)
+    #adaugam compumption: 
+    message += self._toString("compumption",
+      self.consumption,
+      self.mutexConsumption)
+    #adaugam distance: 
+    message += self._toString("distance",
+      self.distance,
+      self.mutexDistance)
     self.clear()
     return message
 

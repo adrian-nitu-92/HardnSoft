@@ -34,7 +34,6 @@ class MyHandler(BaseHTTPRequestHandler):
     if self.path == "/getChartsData":
       try:
         self.sendResponse(self, 200, structure.toString())
-        structure.clear()
       except:
         self.sendResponse(self, 400, "")
         traceback.print_exc(file=sys.stdout)
@@ -64,7 +63,7 @@ class MyHandler(BaseHTTPRequestHandler):
         traceback.print_exc(file=sys.stdout)
       return
 
-    if string.find(self.path, "/putTemperature") != -1:
+    if string.find(self.path, "/putAirTemperature") != -1:
       try:
         value = float(urlparse.parse_qs(parsed.query)['value'][0])
         time = float(urlparse.parse_qs(parsed.query)['time'][0])
@@ -93,8 +92,9 @@ isRunning = True
 # ar trebui ca din 2 in 2 secunde sa se actualizeze logul
 def LogData():
   if isRunning:
+    #nu e bine:o sa scriu mereu date duplicate si nu vreau asta
     structure.logData()
-    threading.Timer(2, LogData).start()
+    threading.Timer(10, LogData).start()
 
 #./ngrok authtoken 25qDk5zVyA9FYfhf1bHq9_5eUvKuH647BZZsHBRvR3f
 #./ngrok http -subdomain=randomtest 9999

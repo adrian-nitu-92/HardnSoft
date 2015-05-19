@@ -24,9 +24,12 @@ class Structure:
 
 
   def addNumSteps(self, time, value):
-    self.clearNumSteps()
     self.mutexNumSteps.acquire()
-    self.numSteps.append([time, value])
+    if len(self.numSteps) == 0:
+      self.numSteps.append([time, value])
+    else:
+      self.numSteps[0][0] = time
+      self.numSteps[0][1] += value
     self.mutexNumSteps.release()
 
   def addTemperature(self, time, value):
@@ -61,6 +64,7 @@ class Structure:
     self.mutexHumidity.release()
 
   def clear(self):
+    self.logData()
     self.clearHartRate()
     self.clearNumSteps()
     self.clearTemperature()
@@ -71,7 +75,7 @@ class Structure:
     message = self._toString("heartrate", 
       self.hartRate, 
       self.mutexHartRate)
-    #adaugam numSteps: 
+    #adaugam numSteps:
     message += self._toString("numsteps",
       self.numSteps,
       self.mutexNumSteps)
@@ -105,7 +109,7 @@ class Structure:
       self.numSteps,
       self.mutexNumSteps)
     # log temperature: 
-    self._logData("temperature",
+    self._logData("airtemperature",
       self.temperature,
       self.mutexTemperature)
     # log temperature: 

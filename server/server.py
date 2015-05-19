@@ -70,6 +70,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   def do_GET(self):
     """Respond to a GET request."""
     print "GET REQUEST: ", self.path
+    time.sleep(5)
     if self.path == "/hello":
       t = MyThread(self, 200, "my message")
       t.start()

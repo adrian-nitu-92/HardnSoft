@@ -12,26 +12,6 @@ HOST_NAME = '192.168.1.132' # !!!REMEMBER TO CHANGE THIS!!!
 PORT_NUMBER = 9000 # Maybe set this to 9000.
 structure = Structure()
 
-class PutDataThread(threading.Thread):
-  def __init__(self, request, data, time, methodUpdate, structure):
-    threading.Thread.__init__(self)
-    self.request = request
-    self.data = data
-    self.methodUpdate = methodUpdate
-    self.structure = structure
-    self.time = time
-
-  def run(self):
-    self.methodUpdate(self.time, self.data)
-    self.sendResponse(200, "")
-
-  def sendResponse(self, code, message):
-    self.request.send_response(code)
-    self.request.send_header("Content-type", "text")
-    self.request.end_headers()
-    self.request.wfile.write(message)
-    print message
-
 class MyHandler(BaseHTTPRequestHandler):
   def sendResponse(self, request, code, message):
     request.send_response(code)

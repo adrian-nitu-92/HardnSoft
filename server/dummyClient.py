@@ -40,7 +40,7 @@ if __name__ == '__main__':
     for i in xrange(10):
       t = MyThread(i+1)
       t.start()
-      time.sleep(3)
+      time.sleep(1)
 
 
 

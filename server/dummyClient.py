@@ -4,6 +4,7 @@ import time
 import threading
 import sys
 
+
 HOST_NAME = '192.168.1.168' # !!!REMEMBER TO CHANGE THIS!!!
 PORT_NUMBER = 9000 # Maybe set this to 9000.
 ROOT = ""
@@ -23,8 +24,15 @@ class MyThread(threading.Thread):
     conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time()))
     res = conn.getresponse()
     #print "request: ", self.id, " ---- ", res.status, res.reason
-    #conn.request("GET","/putNumSteps?value="+str(self.id)+"&time="+str(time.time()))
-    #res = conn.getresponse()
+    conn.request("GET","/putNumSteps?value="+str(self.id)+"&time="+str(time.time()))
+    res = conn.getresponse()
+    from random import randint
+    conn.request("GET","/putTemperature?value="+str(randint(2,9))+"&time="+str(time.time()))
+    res = conn.getresponse()
+    conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time()))
+    res = conn.getresponse()
+    conn.request("GET","/putAirTemperature?value="+str(randint(-100,100))+"&time="+str(time.time()))
+    res = conn.getresponse()
     #if self.id == 5 or self.id == 7:
     #  conn.request("GET","/getChartsData")
     #  res = conn.getresponse()
@@ -32,23 +40,19 @@ class MyThread(threading.Thread):
 
 if __name__ == '__main__':
   print len(sys.argv)
-  if len(sys.argv) == 2:
-    PORT_NUMBER = int(sys.argv[1])
-  if len(sys.argv) == 3:
-    HOST_NAME = sys.argv[1]
-    PORT_NUMBER = int(sys.argv[2])
+  ROOT = sys.argv[1]
 
-  if len(sys.argv) == 4:
-    ROOT = sys.argv[1]
-  else:
-    ROOT = HOST_NAME + ":" + str(PORT_NUMBER)
+#  ROOT = socket.gethostbyname(HOST_NAME)
+#  ROOT = ROOT
+# + ":" + str(PORT_NUMBER)
+  print ROOT
 
   while True:
     for i in xrange(10):
       t = MyThread(i+1)
       t.start()
       t.join()
-      time.sleep(1)
+      #time.sleep(0.5)
 
 
 

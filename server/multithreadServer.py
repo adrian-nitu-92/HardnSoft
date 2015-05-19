@@ -89,6 +89,13 @@ class MyHandler(BaseHTTPRequestHandler):
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
   """Handle requests in a separate thread."""
 
+isRunning = True
+# ar trebui ca din 2 in 2 secunde sa se actualizeze logul
+def LogData():
+  if isRunning:
+    structure.logData()
+    threading.Timer(2, LogData).start()
+
 #./ngrok authtoken 25qDk5zVyA9FYfhf1bHq9_5eUvKuH647BZZsHBRvR3f
 #./ngrok http -subdomain=randomtest 9999
 if __name__ == '__main__':
@@ -97,12 +104,15 @@ if __name__ == '__main__':
   if len(sys.argv) == 3:
     HOST_NAME = sys.argv[1]
     PORT_NUMBER = int(sys.argv[2])
+  LogData()
   httpd = ThreadedHTTPServer((HOST_NAME, PORT_NUMBER), MyHandler)
   print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
   try:
-      httpd.serve_forever()
+    httpd.serve_forever()
   except KeyboardInterrupt:
-      pass
+    isRunning = False
   httpd.server_close()
+  #time.sleep(5)
+  structure.clearLog()  
   print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
 

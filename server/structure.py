@@ -1,11 +1,11 @@
 import time
 from threading import Thread, Lock
+import os
 #This class is thread safe
 #Each method is thread safe -> do not call them after lock.acquire()
 class Structure:
   def __init__(self):
     self.hartRate = []
-    # au fost trimise datele pana la lastSentHartRateIndex - 1
     self.mutexHartRate = Lock()
 
     self.numSteps = []
@@ -79,6 +79,10 @@ class Structure:
     message += self._toString("temperature",
       self.temperature,
       self.mutexTemperature)
+    #adaugam temperature: 
+    message += self._toString("humidity",
+      self.humidity,
+      self.mutexHumidity)
     return message
 
   def _toString(self, key, mylist, mutex):
@@ -90,3 +94,52 @@ class Structure:
     message += ";"
     mutex.release()
     return message
+
+  def logData(self):
+    # log hartRate:
+    self._logData("heartrate", 
+      self.hartRate, 
+      self.mutexHartRate)
+    # log numSteps: 
+    self._logData("numsteps",
+      self.numSteps,
+      self.mutexNumSteps)
+    # log temperature: 
+    self._logData("temperature",
+      self.temperature,
+      self.mutexTemperature)
+    # log temperature: 
+    self._logData("humidity",
+      self.humidity,
+      self.mutexHumidity)
+
+  def _logData(self, key, mylist, mutex):
+    mutex.acquire()
+    with open(key, "a") as myfile:
+      myfile.write(self.serializeList(mylist))
+    mutex.release()
+
+  def serializeList(self, mylist):
+    message = ""
+    for elem in mylist:
+      message += str(elem[0]) + " " + str(elem[1]) + ";\n"
+    return message
+
+  def clearLog(self):
+    # delete hartRate:
+    self._clearData("heartrate", 
+      self.mutexHartRate)
+    # log numSteps: 
+    self._clearData("numsteps",
+      self.mutexNumSteps)
+    # log temperature: 
+    self._clearData("temperature",
+      self.mutexTemperature)
+    # log temperature: 
+    self._clearData("humidity",
+      self.mutexHumidity)
+
+  def _clearData(self, key, mutex):
+    mutex.acquire()
+    os.remove(key)
+    mutex.release()

@@ -23,8 +23,8 @@ class MyThread(threading.Thread):
     conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time()))
     res = conn.getresponse()
     #print "request: ", self.id, " ---- ", res.status, res.reason
-    conn.request("GET","/putNumSteps?value="+str(self.id)+"&time="+str(time.time()))
-    res = conn.getresponse()
+    #conn.request("GET","/putNumSteps?value="+str(self.id)+"&time="+str(time.time()))
+    #res = conn.getresponse()
     #if self.id == 5 or self.id == 7:
     #  conn.request("GET","/getChartsData")
     #  res = conn.getresponse()
@@ -47,6 +47,7 @@ if __name__ == '__main__':
     for i in xrange(10):
       t = MyThread(i+1)
       t.start()
+      t.join()
       time.sleep(1)
 
 

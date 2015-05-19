@@ -1,3 +1,4 @@
+//#include <Wire.h>
 #include <SPI.h>         
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -6,29 +7,29 @@
 #define WIFI
 // Check the modified Twitter lib, with WIFI support
 #include <Twitter.h>
-
+  
 #include <MFRC522.h>
+#include <SD.h>
+//#include <Adafruit_HTU21DF.h>
+//Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
-#include<TimerOne.h>
-
-#define RST_PIN		9		// 
-#define SS_PIN		10		//
+#include "func.h"
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance
-//Twitter twitter("740118787-yM38RvSRo1VWLGqJKa32dbzctr9EYmKLrOAn72Fh"); //@AdrianNitu92
-Twitter twitter("3289784783-Pu57mOkeKTUzmvRekphPctsK9vfLGYj1BtZQYeO"); //Bucharest1HnS
+Twitter twitter("740118787-yM38RvSRo1VWLGqJKa32dbzctr9EYmKLrOAn72Fh"); //@AdrianNitu92
+//Twitter twitter("3289784783-Pu57mOkeKTUzmvRekphPctsK9vfLGYj1BtZQYeO"); //Bucharest1HnS
 // Initialize the client library
 WiFiClient client;
+File myFile;
 
 int port = 9000;  //HERE
-int halfSec = 0;
 IPAddress server(192,168,1,132); 
 
 int status = WL_IDLE_STATUS;
-char ssid[] = "ALLVIEW V1_ViperS";  //  your network SSID (name) //HERE
-char pass[] = "freesxale";       // your network password
-//char ssid[] = "Robolab2";  //  your network SSID (name)
-//char pass[] = "W3<3R0bots";       // your network password
+//char ssid[] = "ALLVIEW V1_ViperS";  //  your network SSID (name) //HERE
+//char pass[] = "freesxale";       // your network password
+char ssid[] = "Robolab2";  //  youFile myFile;r network SSID (name)
+char pass[] = "W3<3R0bots";       // your network password
 int keyIndex = 0;            // your network key Index number (needed only for WEP)
 
 unsigned int localPort = 2390;      // local port to listen for UDP packets
@@ -42,24 +43,41 @@ byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing pack
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 unsigned long epoch;
-unsigned long lastMicros = 0;
+unsigned long lastmillis = 0;
+int STOP_FLAG = 0;
+int STARTED_FLAG = 0;
+int lastVisited = 0;
 
-char buf[1000];
-PString mystring(buf, sizeof(buf));
 void setup() 
 {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for Leonardo only
-  }
+  #warning : set all pin directions
+  
+ /* pinMode(SA, OUTPUT);
+  pinMode(SB, OUTPUT);
+  pinMode(SC, OUTPUT);
+  */
+  Serial.begin(115200);
+  while (!Serial);
   SPI.begin();			// Init SPI bus
   mfrc522.PCD_Init();		// Init MFRC522
   ShowReaderDetails();	// Show details of PCD - MFRC522 Card Reader details
-  Serial.println(F("Scan PICC to see UID, type, and data blocks..."));
+  pinMode(4, OUTPUT);
+  if (!SD.begin(4)) {
+    Serial.println("SD card initialization failed!");
+    return;
+  }
+  SDTest();
+  WifiConnect();
+  Udp.begin(localPort);
+  Serial.println("Get Local Time");
+  while(epoch == 0)
+    NTPPart(); //make sure we have a ntp package
+  lastmillis = millis();
+}
 
-
-  // check for the presence of the shield:
+void WifiConnect()
+{
+    // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present"); 
     // don't continue:
@@ -80,51 +98,128 @@ void setup()
   }
   Serial.println("Connected to wifi");
   printWifiStatus();
-  
-  Udp.begin(localPort);
-  Serial.println("Get Local Time");
-  while(epoch == 0)
-    NTPPart(); //make sure we have a ntp package
-  lastMicros = micros();
+/*  if (htu.begin()) {
+    Serial.print("Temp: "); Serial.print(htu.readTemperature());
+    Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
+  } else {
+     Serial.println("Couldn't find sensor!");
+  }*/
 }
+
+void SDTest()
+{
+   myFile = SD.open("/");
+  
+  // if the file opened okay, write to it:
+  if (myFile) {
+     Serial.println("Sd card Contents");
+     printDirectory(myFile, 0);
+    Serial.println("SD card listing done!");
+  }
+  else 
+  Serial.println("Can't open /");
+}
+
+void printDirectory(File dir, int numTabs) {
+   while(true) {
+     
+     File entry =  dir.openNextFile();
+     if (! entry) {
+       // no more files
+       //Serial.println("**nomorefiles**");
+       break;
+     }
+     for (uint8_t i=0; i<numTabs; i++) {
+       Serial.print('\t');
+     }
+     Serial.print(entry.name());
+     if (entry.isDirectory()) {
+       Serial.println("/");
+       printDirectory(entry, numTabs+1);
+     } else {
+       // files have sizes, directories do not
+       Serial.print("\t\t");
+       Serial.println(entry.size(), DEC);
+     }
+     entry.close();
+   }
+}
+
 
 char lastWaypoint[20];
 char waypoint[20];
+char stopWaypoint[20];
 PString waypointHelper(waypoint, sizeof(waypoint));
-void loop()
+void tweetTag()
 {
+  char twitterDataBuf[161];
+  PString tpost(twitterDataBuf, 161);
   int k;
-  mystring.begin();
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
     return;
   }
-
   // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) {
     return;
   }
-
+  STARTED_FLAG = 1;
   // Dump debug info about the card; PICC_HaltA() is automatically called
-  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+/*
+  #if 0
+  byte keyBuffer[18];
+  byte byteCount;
+  mfrc522.MIFARE_Key key;
+  for (byte yy = 0; yy < 6; yy++) {
+    key.keyByte[yy] = 0xFF;
+  }
+  int status = PCD_Authenticate(mfrc522.PICC_CMD_MF_AUTH_KEY_A, 0, &key, &(mfrc522.uid));
+  if (status != 1) {
+    Serial.print(F("MIFARE_Read() failed: "));
+  }
+  status = mfrc522.MIFARE_Read(0, keyBuffer, &byteCount);
+  mfrc522.PICC_HaltA(); // Halt the PICC before stopping the encrypted session.
+  mfrc522.PCD_StopCrypto1();
+  if (status != 1) {
+    Serial.print(F("MIFARE_Read() failed: "));
+  }
   mystring.print("Reached waypoint:");
   waypointHelper.begin();
   for(k =0; k < 16; k++){
+    waypointHelper.print(keyBuffer[k], HEX);
+  }
+  #else*/
+  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+  tpost.print("Reached waypoint:");
+  waypointHelper.begin();
+  for(k = 0; k < 16; k++){
     waypointHelper.print(mfrc522.publicBuffer[k], HEX);
   }
-  if(! strcmp(waypoint, lastWaypoint))
+  if(! strcmp(waypoint, lastWaypoint)){
+    Serial.println("Same Tag");
+    Serial.println(waypoint);
+    Serial.println(lastWaypoint);
     return;
+  }
+  #if 0
+  if(strcmp(waypoint, stopWaypoint)){
+    Serial.println("STOP detected");
+    Serial.println(waypoint);
+    Serial.println(stopWaypoint);
+    STOP_FLAG = 1;
+  }
+  #endif
   memcpy(lastWaypoint, waypoint, 20);
+  tpost.print(waypoint);
   Serial.print(F("RFID data: 0x"));
-  mystring.print(waypointHelper);
-  mystring.print(" at ");
+  tpost.print(" at ");/*
   Serial.print(F("RFID final bits: 0x"));
   Serial.print(mfrc522.publicBuffer[16], HEX);
   Serial.print(mfrc522.publicBuffer[17], HEX);
-  Serial.println();
-  mystring.print(formatEpoch());
+  Serial.println();*/
+  tpost.print(formatEpoch());
   Serial.println("Twitter bors:");
-  Serial.println(mystring);
-  if (twitter.post(mystring)) { //HERE
+  Serial.println(tpost);
+  if (twitter.post(tpost)) { //HERE
     int status = twitter.wait(&Serial);
     Serial.print("Status is");
     Serial.println(status);
@@ -135,28 +230,116 @@ void loop()
       Serial.println(status);
     }
   }
+  lastVisited++;
+}
+
+void loop()
+{
+  if(STOP_FLAG)
+    while(1);
+  tweetTag();
+  refreshData();
+  if(! STARTED_FLAG)
+    return;
+  if(timeoutTweet())
+    tweetData();
+  if(timeoutServer())
+    dataToServer();
+}
+
+
+int timeoutTweet()
+{
+  static unsigned long lastSent = 0;
+  int ret = lastSent + 60000 < millis();
+  if(ret)
+    lastSent = millis();
+  return ret;
+}
+int timeoutServer()
+{
+  static unsigned long lastSent = 0;
+  int ret = lastSent + 10000 < millis();
+  if(ret)
+    lastSent = millis();
+  return ret;
+}
+char * bioDataName[] = {"BodyTemp", "HeartRate", "NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
+const int bioDataSize = sizeof(bioDataName) / sizeof(char*);
+int bioData[bioDataSize];
+char * bioDataSI[bioDataSize] = {"C", "BPM", "", "m", "C", "%", "%" };
+//HERE last visited ?
+void tweetData()
+{
+  char twitterDataBuf[161];
+  PString tpost(twitterDataBuf, 161);
+  tpost.print("Bucharest1 Data:");
+  for(int k = 0; k < bioDataSize; k++)
+  {
+    tpost.print(bioDataName[k]);
+    tpost.print(" ");    
+    tpost.print(bioData[k]);
+    tpost.print(bioDataSI[k]);
+    tpost.print(",");
+  }
   
- if (client.connect(server, port)) { //HERE
-      Serial.println("connected");
+  tpost.print("at");
+  tpost.print(formatEpoch());
+  Serial.println("Twitter message is");
+  Serial.println(tpost);
+  if (twitter.post(tpost)) { //HERE
+    int status = twitter.wait(&Serial);
+    Serial.print("Status is");
+    Serial.println(status);
+    if (status == 200) {
+      Serial.println("Twitter ok");
+    } else {
+      Serial.print("Twitter failed : code ");
+      Serial.println(status);
+    }
+  }
+}
+
+void dataToServer()
+{
       // Make a HTTP request:
-      char buffy[60];
-      PString req(buffy, 60);
-      req.print("GET /putNumSteps?time=");
-      req.print(epoch);
-      req.print(".");
-      if(halfSec)
-         req.print("50");
-      else
-         req.print("00");
-      req.print("&value=42"); //XXX
-      Serial.print(req);
+      char buffy[150];
+      PString req(buffy, 150);
+      for(int k = 0; k < 7; k++){
+        
+ if (client.connect("randomtest.ngrok.io", 80)) { //HERE
+      Serial.println("connected");
+        req.begin();
+        req.print("GET /put");
+        req.print(bioDataName[k]);
+        req.print("?statie=");
+        req.print(lastVisited);
+        req.print("&time=");
+        req.print(updateEpoch());
+        req.print(".");
+        req.print((millis() % 1000) / 10); 
+        req.print("&value=");
+        req.print(bioData[k]);
+        req.println(" HTTP/1.1");
+        req.println("Host: randomtest.ngrok.io");
+        req.println("User-Agent: ArduinoWiFi/1.1");
+        req.println("Connection: close");
+      //Serial.println(req);
+      Serial.println(bioDataName[k]);
       client.print(req);
       client.println();
-      client.println();
+      #if 0
+      while(client.available()){
+	char c = client.read();
+            Serial.print(c);
+      }
+      delay(300);
+      #endif
       client.flush();
       client.stop();
     } else {
       Serial.println("Can't connect to Server");
+   }
 }
 }
 
@@ -193,7 +376,6 @@ unsigned long NTPPart()
     Serial.print("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
     Serial.println(epoch);                           
     Serial.println(formatEpoch());
-    mystring.print(formatEpoch());
   }
   // wait ten seconds before asking for the time again
 //  delay(10000); 
@@ -249,7 +431,46 @@ void printWifiStatus() {
   Serial.println(" dBm");
 }
 
+int readADC(int input)
+{
+  int ret = -1;
+   if(input == HR ||
+   input == HALL ||
+   input == MIC ||
+   input == R ||
+   input == G ||
+   input == B ||
+   input == SONIC ||
+   input == INA){
+     setADCMux(input);
+//HERE
+     ret = analogRead(A0);
+   } else {
+     if(input == X)
+       ret = analogRead(A1);
+     if(input == Y)
+       ret = analogRead(A2);
+     if(input == Z)
+       ret = analogRead(A3);
+   }
+   return ret;
+}
 
+
+void refreshData()
+{
+    //{"BodyTemp", "HeartRate", " NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
+    for(int k = 0 ; k < 7; k++)
+      bioData[k] = readADC(k);
+    
+}
+void setADCMux(int input)
+{
+  digitalWrite(SA, input & 1 );
+  digitalWrite(SB, input & 2 );
+  digitalWrite(SC, input & 4 );
+
+}  
 void ShowReaderDetails() {
   // Get the MFRC522 software version
   byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
@@ -270,12 +491,20 @@ void ShowReaderDetails() {
 
 char formattedEpoch[25];
 PString fe(formattedEpoch, sizeof(formattedEpoch));
+unsigned long updateEpoch()
+{
+    unsigned long mm = millis();
+    while(mm > lastmillis + 1000 )
+    {
+      lastmillis +=1000;
+      epoch++;
+    }
+    return epoch;
+}
 char * formatEpoch()
-{  
-    unsigned long mm = micros();
-    epoch += (mm - lastMicros)/1000000;
-    lastMicros = mm; 
+{
     fe.begin();
+    updateEpoch();
     // print the hour, minute and second:
     fe.print((epoch  % 86400L) / 3600); // print the hour (86400 equals secs per day)
     fe.print(':'); 
@@ -291,7 +520,7 @@ char * formatEpoch()
     }
     fe.print(epoch %60); // print the second
     fe.print(".");
-    fe.print((mm % 1000000) / 10000); 
+    fe.print((millis() % 1000) / 10); 
     return formattedEpoch; 
 }
 

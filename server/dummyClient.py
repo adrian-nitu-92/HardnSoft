@@ -36,12 +36,11 @@ if __name__ == '__main__':
     HOST_NAME = sys.argv[1]
     PORT_NUMBER = int(sys.argv[2])
 
-  num = 0
-  for i in xrange(10):
-    num += 1
-    t = MyThread(num)
-    t.start()
-    time.sleep(6)
+  while True:
+    for i in xrange(10):
+      t = MyThread(i+1)
+      t.start()
+      time.sleep(3)
 
 
 

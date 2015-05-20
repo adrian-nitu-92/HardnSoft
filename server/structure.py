@@ -94,15 +94,7 @@ class Structure:
 
   def addNumSteps(self, rez):
     self.mutexNumSteps.acquire()
-    if len(self.numSteps) == 0:
-      self.numSteps.append(rez)
-    else:
-      self.numSteps[0][0] = rez[0]
-      self.numSteps[0][1] += rez[1]
-      try:
-        self.numSteps[0][2] = rez[2]
-      except:
-        pass
+    self.numSteps = [rez]
     self.mutexNumSteps.release()
 
   def addTemperature(self, rez):
@@ -268,7 +260,7 @@ class Structure:
     self.mutexTreasure.acquire()
     message = ""
     for elem in self.pertmanentTreasure:
-      message += elem.timestamp + " " + elem.checkpoint + " " + elem.value + " " + self.name + ";\n"
+      message += str(elem.timestamp) + " " + str(elem.checkpoint) + " " + str(elem.value) + " " + elem.name + ";\n"
     self.mutexTreasure.release()
     with open("treasure", "a") as myfile:
       myfile.write(message)

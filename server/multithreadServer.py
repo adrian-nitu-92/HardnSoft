@@ -38,16 +38,22 @@ class ChartRender(threading.Thread):
   def __init__(self, chart):
     threading.Thread.__init__(self)
     self.chart = chart
+    self.chart.s.open()
 
   def run(self):
     self.chart.s.open()
+    maxTimestap = 0
     while isRunning:
-      points = self.chart.method()
-      for point in points:
-        self.chart.s.write(dict(x=point[0], y=point[1]))
-      time.sleep(0.5)
+      inputPoints = self.chart.method()
+      inputPoints.sort(key=lambda tup: tup[0])
+      points = [point for point in inputPoints if point[0] > maxTimestap]
+      if (len(points)): 
+        maxTimestap = points[len(points)-1][0]
+        print "@@@@@@@@@@@@@@@@@@@@@@@@@ ", points
+        for point in points:
+          self.chart.s.write(dict(x=point[0], y=point[1]))
+      time.sleep(10)
     self.chart.s.close()
-
 
 class Chart:
   def __init__(self):
@@ -72,7 +78,35 @@ class Chart:
       )
       data = Data([trace])
       # Add title to layout object
-      layout = Layout(title=title[num])
+      layout = Layout(
+        title=title[num]
+          #xaxis=XAxis(
+          #autotick=False,
+          #ticks='outside',
+          #tick0=0,
+          #dtick=0.25,
+          #showgrid=True,
+          #zeroline=True,
+          #showline=True,
+          #mirror='ticks',
+          #gridcolor='#bdbdbd',
+          #gridwidth=2,
+          #zerolinecolor='#969696',
+          #zerolinewidth=4,
+          #linecolor='#636363',
+          #linewidth=6),
+        #yaxis=YAxis(
+          #showgrid=True,
+          #zeroline=True,
+          #showline=True,
+          #mirror='ticks',
+          #gridcolor='#bdbdbd',
+          #gridwidth=2,
+          #zerolinecolor='#969696',
+          #zerolinewidth=4,
+          #linecolor='#636363',
+          #linewidth=6)
+      )
 
       # Make a figure object
       fig = Figure(data=data, layout=layout)

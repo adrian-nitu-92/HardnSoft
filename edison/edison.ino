@@ -10,8 +10,9 @@
   
 #include <MFRC522.h>
 #include <SD.h>
-//#include <Adafruit_HTU21DF.h>
-//Adafruit_HTU21DF htu = Adafruit_HTU21DF();
+#include <Wire.h>
+#include <Adafruit_HTU21DF.h>
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 #include "func.h"
 
@@ -26,10 +27,10 @@ int port = 9000;  //HERE
 IPAddress server(192,168,1,132); 
 
 int status = WL_IDLE_STATUS;
-//char ssid[] = "ALLVIEW V1_ViperS";  //  your network SSID (name) //HERE
-//char pass[] = "freesxale";       // your network password
-char ssid[] = "Robolab2";  //  youFile myFile;r network SSID (name)
-char pass[] = "W3<3R0bots";       // your network password
+char ssid[] = "ALLVIEW V1_ViperS";  //  your network SSID (name) //HERE
+char pass[] = "freesxale";       // your network password
+//char ssid[] = "Robolab2";  //  youFile myFile;r network SSID (name)
+//char pass[] = "W3<3R0bots";       // your network password
 int keyIndex = 0;            // your network key Index number (needed only for WEP)
 
 unsigned int localPort = 2390;      // local port to listen for UDP packets
@@ -48,6 +49,11 @@ int STOP_FLAG = 0;
 int STARTED_FLAG = 0;
 int lastVisited = 0;
 
+char * bioDataName[] = {"BodyTemp", "HeartRate", "NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
+const int bioDataSize = sizeof(bioDataName) / sizeof(char*);
+float bioData[bioDataSize];
+char * bioDataSI[bioDataSize] = {"C", "BPM", "", "m", "C", "%", "%" };
+
 void setup() 
 {
   #warning : set all pin directions
@@ -62,6 +68,11 @@ void setup()
   mfrc522.PCD_Init();		// Init MFRC522
   ShowReaderDetails();	// Show details of PCD - MFRC522 Card Reader details
   pinMode(4, OUTPUT);
+  pinMode(SA, OUTPUT);
+  pinMode(SB, OUTPUT);
+  pinMode(SC, OUTPUT);
+  pinMode(2,OUTPUT);
+  pinMode(2, LOW);
   if (!SD.begin(4)) {
     Serial.println("SD card initialization failed!");
     return;
@@ -73,6 +84,15 @@ void setup()
   while(epoch == 0)
     NTPPart(); //make sure we have a ntp package
   lastmillis = millis();
+  myFile = SD.open("/Bucharest1.csv",FILE_WRITE);
+  if (htu.begin()) {
+    Serial.print("Temp: "); Serial.print(htu.readTemperature());
+    bioData[4] = htu.readTemperature();
+    Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
+    bioData[5] = htu.readHumidity();
+  } else {
+     Serial.println("Couldn't find sensor!");
+  }
 }
 
 void WifiConnect()
@@ -98,19 +118,36 @@ void WifiConnect()
   }
   Serial.println("Connected to wifi");
   printWifiStatus();
-/*  if (htu.begin()) {
-    Serial.print("Temp: "); Serial.print(htu.readTemperature());
-    Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
-  } else {
-     Serial.println("Couldn't find sensor!");
-  }*/
 }
+
+void logString(char* dataString)
+{
+    if(! myFile) {
+      Serial.println("No logging available");
+      return;
+    }
+    Serial.println("Sd card write:");
+    //Serial.println(dataString);
+    myFile.print(dataString);
+    myFile.flush();
+}
+void logPString(PString dataString)
+{
+    if(! myFile) {
+      Serial.println("No logging available");
+      return;
+    }
+    Serial.println("Sd card write:");
+    Serial.println(dataString);
+    myFile.print(dataString);
+    myFile.flush();
+}
+
 
 void SDTest()
 {
    myFile = SD.open("/");
   
-  // if the file opened okay, write to it:
   if (myFile) {
      Serial.println("Sd card Contents");
      printDirectory(myFile, 0);
@@ -188,6 +225,7 @@ void tweetTag()
     waypointHelper.print(keyBuffer[k], HEX);
   }
   #else*/
+  pinMode(2, HIGH);
   mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
   tpost.print("Reached waypoint:");
   waypointHelper.begin();
@@ -198,6 +236,7 @@ void tweetTag()
     Serial.println("Same Tag");
     Serial.println(waypoint);
     Serial.println(lastWaypoint);
+    pinMode(2, HIGH);
     return;
   }
   #if 0
@@ -231,6 +270,9 @@ void tweetTag()
     }
   }
   lastVisited++;
+  tpost.println();
+  logPString(tpost);
+  pinMode(2, HIGH);
 }
 
 void loop()
@@ -239,6 +281,7 @@ void loop()
     while(1);
   tweetTag();
   refreshData();
+  TreasureData();
   if(! STARTED_FLAG)
     return;
   if(timeoutTweet())
@@ -246,8 +289,27 @@ void loop()
   if(timeoutServer())
     dataToServer();
 }
-
-
+int NOTHING = 1;
+int gauss ;
+void TreasureData()
+{
+  if(gauss < -550){
+//"GET","/putTreasure?time="+str(randint(0,100))+"&checkpoint="+str(randint(0,10))+"&value="+str(randint(-100,100))+"&name=dummy"
+   char treasureBuffer[200];
+   PString TreasureHelper(treasureBuffer, sizeof(treasureBuffer));
+   TreasureHelper.print("GET /putTreasure?");
+   TreasureHelper.print("time=");
+   TreasureHelper.print(epoch);
+   TreasureHelper.print("&checkpoint=");
+   TreasureHelper.print(lastVisited);
+   TreasureHelper.print("&value=");
+   TreasureHelper.print(gauss);//HERE
+   TreasureHelper.print("&name=");
+   TreasureHelper.print("GAUSS");
+   singleDataToServer(&TreasureHelper);
+  }
+}
+  
 int timeoutTweet()
 {
   static unsigned long lastSent = 0;
@@ -264,11 +326,7 @@ int timeoutServer()
     lastSent = millis();
   return ret;
 }
-char * bioDataName[] = {"BodyTemp", "HeartRate", "NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
-const int bioDataSize = sizeof(bioDataName) / sizeof(char*);
-int bioData[bioDataSize];
-char * bioDataSI[bioDataSize] = {"C", "BPM", "", "m", "C", "%", "%" };
-//HERE last visited ?
+
 void tweetData()
 {
   char twitterDataBuf[161];
@@ -298,37 +356,21 @@ void tweetData()
       Serial.println(status);
     }
   }
+  tpost.println();
+  logPString(tpost);
 }
 
-void dataToServer()
+void singleDataToServer(PString * req)
 {
-      // Make a HTTP request:
-      char buffy[150];
-      PString req(buffy, 150);
-      for(int k = 0; k < 7; k++){
-        
- if (client.connect("randomtest.ngrok.io", 80)) { //HERE
-      Serial.println("connected");
-        req.begin();
-        req.print("GET /put");
-        req.print(bioDataName[k]);
-        req.print("?statie=");
-        req.print(lastVisited);
-        req.print("&time=");
-        req.print(updateEpoch());
-        req.print(".");
-        req.print((millis() % 1000) / 10); 
-        req.print("&value=");
-        req.print(bioData[k]);
-        req.println(" HTTP/1.1");
-        req.println("Host: randomtest.ngrok.io");
-        req.println("User-Agent: ArduinoWiFi/1.1");
-        req.println("Connection: close");
-      //Serial.println(req);
-      Serial.println(bioDataName[k]);
-      client.print(req);
-      client.println();
-      #if 0
+   if (client.connect("randomtest.ngrok.io", 80)) { 
+      req->println(" HTTP/1.1");
+      req->println("Host: randomtest.ngrok.io");
+      req->println("User-Agent: ArduinoWiFi/1.1");
+      req->println("Connection: close");
+      req->print("\n\n");
+      client.print(*req);
+      #if 1
+      Serial.println(*req);
       while(client.available()){
 	char c = client.read();
             Serial.print(c);
@@ -340,7 +382,28 @@ void dataToServer()
     } else {
       Serial.println("Can't connect to Server");
    }
+   
+  logPString(*req);
 }
+void dataToServer()
+{
+  // Make a HTTP request:
+  char buffy[150];
+  PString req(buffy, 150);
+  for(int k = 0; k < 7; k++){
+    req.begin();
+    req.print("GET /put");
+    req.print(bioDataName[k]);
+    req.print("?statie=");
+    req.print(lastVisited);
+    req.print("&time=");
+    updateEpoch();
+    req.print(epoch);
+    req.print("&value=");
+    req.print(bioData[k]);
+    Serial.println(bioDataName[k]);
+    singleDataToServer(&req);
+  }
 }
 
 unsigned long NTPPart()
@@ -371,7 +434,6 @@ unsigned long NTPPart()
     const unsigned long seventyYears = 2208988800UL;     
     // subtract seventy years:
     epoch = secsSince1900 - seventyYears;
-    epoch += 3*3600; //set Romania time :)
     // print Unix time:
     Serial.print("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
     Serial.println(epoch);                           
@@ -456,19 +518,43 @@ int readADC(int input)
    return ret;
 }
 
+int estimateGauss(int adc)
+{
+   int ret;
+//   ret = (adc - 1024/3) * 3  - 1000;
+   ret = ((adc*3.3)/512.0 - 5.0 ) * 333.3;
+   Serial.println(ret);
+   return ret;
+}
 
 void refreshData()
 {
     //{"BodyTemp", "HeartRate", " NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
-    for(int k = 0 ; k < 7; k++)
-      bioData[k] = readADC(k);
-    
+    //for(int k = 0 ; k < 7; k++)
+    //  bioData[k] = readADC(k);
+    bioData[0] = 80.0 + (readADC(0)/100.00 - 15);
+    bioData[2] += 1;
+    bioData[3] += 0.41;
+    gauss = estimateGauss(readADC(HALL));
+    Serial.print("Temp: "); Serial.print(htu.readTemperature());
+    bioData[4] = htu.readTemperature();
+    Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
+    bioData[5] = htu.readHumidity();
 }
 void setADCMux(int input)
 {
-  digitalWrite(SA, input & 1 );
-  digitalWrite(SB, input & 2 );
-  digitalWrite(SC, input & 4 );
+  if(input & 1)
+    digitalWrite(SA, HIGH);
+  else
+    digitalWrite(SA, LOW);
+  if(input & 2)
+    digitalWrite(SB, HIGH);
+  else
+    digitalWrite(SB, LOW);
+  if(input & 4)
+    digitalWrite(SC, HIGH);
+  else
+    digitalWrite(SC, LOW);
 
 }  
 void ShowReaderDetails() {
@@ -505,6 +591,7 @@ char * formatEpoch()
 {
     fe.begin();
     updateEpoch();
+    epoch +=3 * 3600;
     // print the hour, minute and second:
     fe.print((epoch  % 86400L) / 3600); // print the hour (86400 equals secs per day)
     fe.print(':'); 
@@ -519,8 +606,7 @@ char * formatEpoch()
       fe.print('0');      
     }
     fe.print(epoch %60); // print the second
-    fe.print(".");
-    fe.print((millis() % 1000) / 10); 
+    epoch -=3 * 3600;
     return formattedEpoch; 
 }
 

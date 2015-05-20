@@ -1,5 +1,5 @@
 
-#define RST_PIN		9		// NFC
+#define RST_PIN		-1		// NFC
 #define SS_PIN		10		// NFC
 
 

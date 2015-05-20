@@ -21,20 +21,25 @@ class MyThread(threading.Thread):
 
   def sendRequest(self):
     conn = httplib.HTTPConnection(ROOT)
-    conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time())+"&y=x")
+    conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time())+"&statie=x")
     res = conn.getresponse()
+    print "request: ", self.id, " ---- ", res.status, res.reason
     #print "request: ", self.id, " ---- ", res.status, res.reason
-    #conn.request("GET","/putNumSteps?value="+str(self.id)+"&time="+str(time.time()))
-    #res = conn.getresponse()
-    #from random import randint
-    #conn.request("GET","/putTemperature?value="+str(randint(2,9))+"&time="+str(time.time()))
-    #res = conn.getresponse()
-    #conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time()))
-    #res = conn.getresponse()
-    #conn.request("GET","/putAirTemperature?value="+str(randint(-100,100))+"&time="+str(time.time()))
-    #res = conn.getresponse()
-    #conn.request("GET","/putTreasure?time="+str(randint(0,100))+"&checkpoint="+str(randint(0,10))+"&value="+str(randint(-100,100))+"&name=dummy")
-    #res = conn.getresponse()
+    conn.request("GET","/putNumSteps?value="+str(self.id)+"&time="+str(time.time())+"&statie=x")
+    res = conn.getresponse()
+    print "request: ", self.id, " ---- ", res.status, res.reason
+    from random import randint
+    conn.request("GET","/putAirTemperature?value="+str(randint(2,9))+"&time="+str(time.time())+"&statie=x")
+    res = conn.getresponse()
+    print "request: ", self.id, " ---- ", res.status, res.reason
+    conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time())+"&statie=x")
+    res = conn.getresponse()
+    print "request: ", self.id, " ---- ", res.status, res.reason
+    conn.request("GET","/putAirTemperature?value="+str(randint(-100,100))+"&time="+str(time.time())+"&statie=x")
+    res = conn.getresponse()
+    print "request: ", self.id, " ---- ", res.status, res.reason
+    conn.request("GET","/putTreasure?time="+str(time.time())+"&checkpoint="+str(randint(0,10))+"&value="+str(randint(-100,100))+"&name=dummy")
+    res = conn.getresponse()
     #if self.id == 5 or self.id == 7:
     #  conn.request("GET","/getChartsData")
     #  res = conn.getresponse()
@@ -54,7 +59,7 @@ if __name__ == '__main__':
       t = MyThread(i+1)
       t.start()
       t.join()
-      #time.sleep(0.5)
+      time.sleep(3)
 
 
 

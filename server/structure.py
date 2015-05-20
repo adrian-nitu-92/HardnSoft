@@ -72,43 +72,47 @@ class Structure:
     self.treasure.append(Treasure(time, checkpoint, value, name))
     self.mutexTreasure.release()
 
-  def addDistance(self, time, value):
+  def addDistance(self, rez):
     self.mutexDistance.acquire()
-    self.distance.append([time, value])
+    self.distance.append(rez)
     self.mutexDistance.release()
 
-  def addConsumption(self, time, value):
+  def addConsumption(self, rez):
     self.mutexConsumption.acquire()
-    self.consumption.append([time, value])
+    self.consumption.append(rez)
     self.mutexConsumption.release()
   
-  def addBodyTemperature(self, time, value):
+  def addBodyTemperature(self, rez):
     self.mutexBodyTemperature.acquire()
-    self.bodyTemperature.append([time, value])
+    self.bodyTemperature.append(rez)
     self.mutexBodyTemperature.release()
 
-  def addHartRate(self, time, value):
+  def addHartRate(self, rez):
     self.mutexHartRate.acquire()
-    self.hartRate.append([time, value])
+    self.hartRate.append(rez)
     self.mutexHartRate.release()
 
-  def addNumSteps(self, time, value):
+  def addNumSteps(self, rez):
     self.mutexNumSteps.acquire()
     if len(self.numSteps) == 0:
-      self.numSteps.append([time, value])
+      self.numSteps.append(rez)
     else:
-      self.numSteps[0][0] = time
-      self.numSteps[0][1] += value
+      self.numSteps[0][0] = rez[0]
+      self.numSteps[0][1] += rez[1]
+      try:
+        self.numSteps[0][2] = rez[2]
+      except:
+        pass
     self.mutexNumSteps.release()
 
-  def addTemperature(self, time, value):
+  def addTemperature(self, rez):
     self.mutexTemperature.acquire()
-    self.temperature.append([time, value])
+    self.temperature.append(rez)
     self.mutexTemperature.release()
 
-  def addHumidity(self, time, value):
+  def addHumidity(self, rez):
     self.mutexHumidity.acquire()
-    self.humidity.append([time, value])
+    self.humidity.append(rez)
     self.mutexHumidity.release()
 
   def clearDistance(self):
@@ -189,7 +193,7 @@ class Structure:
       self.bodyTemperature,
       self.mutexBodyTemperature)
     #adaugam compumption: 
-    message += self._toString("compumption",
+    message += self._toString("comsumption",
       self.consumption,
       self.mutexConsumption)
     #adaugam distance: 
@@ -212,11 +216,7 @@ class Structure:
   def _toString(self, key, mylist, mutex):
     mutex.acquire()
     message = key + "="
-    num = 0
     for rate in mylist:
-      if num == 2:
-        break
-      num += 1
       message += str(rate[0]) + " " + str(rate[1]) + "|"
     # delimitator
     message += ";"

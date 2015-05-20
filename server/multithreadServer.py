@@ -19,6 +19,7 @@ import numpy as np
 HOST_NAME = '192.168.1.168' # !!!REMEMBER TO CHANGE THIS!!!
 PORT_NUMBER = 9000 # Maybe set this to 9000.
 structure = Structure()
+isRunning = True
 
 
 class ChartData:
@@ -40,8 +41,8 @@ class ChartRender(threading.Thread):
 
   def run(self):
     self.chart.s.open()
-    while True:
-      points = self.chart.method
+    while isRunning:
+      points = self.chart.method()
       for point in points:
         self.chart.s.write(dict(x=point[0], y=point[1]))
       time.sleep(0.5)
@@ -52,7 +53,7 @@ class Chart:
   def __init__(self):
     stream_ids = tls.get_credentials_file()['stream_ids']
     self.charts = []
-    methods = [structure.getHartRate(), structure.getNumSteps(), structure.getTemperature(), structure.getHumidity()]
+    methods = [structure.getHartRate, structure.getNumSteps, structure.getTemperature, structure.getHumidity]
     title = ["Hart Rate", "Steps", "Air Temperature", "Humidity"]
     filename = ["HartRate", "Steps", "AirTemperature", "Humidity"]
     num = 0
@@ -98,6 +99,23 @@ class MyHandler(BaseHTTPRequestHandler):
     request.send_header("Content-type", "text")
     request.end_headers()
     request.wfile.write(message)
+
+  def parse(self, parsed):
+    rez = []
+    try:
+      rez.append(float(urlparse.parse_qs(parsed.query)['time'][0]))
+    except:
+      pass
+    try:
+      rez.append(float(urlparse.parse_qs(parsed.query)['value'][0]))
+    except:
+      pass
+    try:
+      rez.append(urlparse.parse_qs(parsed.query)['statie'][0])
+    except:
+      pass
+    return rez
+
   def do_HEAD(self):
     pass
   def do_GET(self):
@@ -123,11 +141,19 @@ class MyHandler(BaseHTTPRequestHandler):
 
     url = self.path
     parsed = urlparse.urlparse(url)
+
+    if string.find(self.path, "/putBodyTemp") != -1:
+      try:
+        structure.addBodyTemperature(self.parse(parsed))
+        self.sendResponse(self, 200, "")
+      except:
+        self.sendResponse(self, 400, "")
+        traceback.print_exc(file=sys.stdout)
+      return
+
     if string.find(self.path, "/putHeartRate") != -1:
       try:
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        structure.addHartRate(time, value)
+        structure.addHartRate(self.parse(parsed))
         self.sendResponse(self, 200, "")
       except:
         self.sendResponse(self, 400, "")
@@ -136,20 +162,25 @@ class MyHandler(BaseHTTPRequestHandler):
 
     if string.find(self.path, "/putNumSteps") != -1:
       try:
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        structure.addNumSteps(time, value)
+        structure.addNumSteps(self.parse(parsed))
         self.sendResponse(self, 200, "")
       except:
         self.sendResponse(self, 400, "")
         traceback.print_exc(file=sys.stdout)
       return
 
-    if string.find(self.path, "/putAirTemperature") != -1:
+    if string.find(self.path, "/putDistance") != -1:
       try:
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        structure.addTemperature(time, value)
+        structure.addDistance(self.parse(parsed))
+        self.sendResponse(self, 200, "")
+      except:
+        self.sendResponse(self, 400, "")
+        traceback.print_exc(file=sys.stdout)
+      return
+
+    if string.find(self.path, "/putAirTemp") != -1:
+      try:
+        structure.addTemperature(self.parse(parsed))
         self.sendResponse(self, 200, "")
       except:
         self.sendResponse(self, 400, "")
@@ -158,9 +189,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
     if string.find(self.path, "/putHumidity") != -1:
       try:
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        structure.addHumidity(time, value)
+        structure.addHumidity(self.parse(parsed))
         self.sendResponse(self, 200, "")
       except:
         self.sendResponse(self, 400, "")
@@ -180,43 +209,19 @@ class MyHandler(BaseHTTPRequestHandler):
         traceback.print_exc(file=sys.stdout)
       return
 
-    if string.find(self.path, "/putBodyTemperature") != -1:
-      try:
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        structure.addBodyTemperature(time, value)
-        self.sendResponse(self, 200, "")
-      except:
-        self.sendResponse(self, 400, "")
-        traceback.print_exc(file=sys.stdout)
-      return
-
     if string.find(self.path, "/putConsumption") != -1:
       try:
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        structure.addConsumption(time, value)
+        structure.addConsumption(self.parse(parsed))
         self.sendResponse(self, 200, "")
       except:
         self.sendResponse(self, 400, "")
         traceback.print_exc(file=sys.stdout)
       return
 
-    if string.find(self.path, "/putDistance") != -1:
-      try:
-        time = float(urlparse.parse_qs(parsed.query)['time'][0])
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
-        structure.addDistance(time, value)
-        self.sendResponse(self, 200, "")
-      except:
-        self.sendResponse(self, 400, "")
-        traceback.print_exc(file=sys.stdout)
-      return
+    
  
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
   """Handle requests in a separate thread."""
-
-isRunning = True
 
 #./ngrok authtoken 25qDk5zVyA9FYfhf1bHq9_5eUvKuH647BZZsHBRvR3f
 #./ngrok http -subdomain=randomtest 9999
@@ -228,7 +233,7 @@ if __name__ == '__main__':
     HOST_NAME = sys.argv[1]
     PORT_NUMBER = int(sys.argv[2])
   #LogData()
-  #Chart().run()
+  Chart().run()
   httpd = ThreadedHTTPServer((HOST_NAME, PORT_NUMBER), MyHandler)
   print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
   try:

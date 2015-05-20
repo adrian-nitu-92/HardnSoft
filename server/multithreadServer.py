@@ -49,19 +49,24 @@ class ChartRender(threading.Thread):
       points = [point for point in inputPoints if point[0] > maxTimestap]
       if (len(points)): 
         maxTimestap = points[len(points)-1][0]
-        print "@@@@@@@@@@@@@@@@@@@@@@@@@ ", points
         for point in points:
           self.chart.s.write(dict(x=point[0], y=point[1]))
-      time.sleep(10)
+      time.sleep(1)
     self.chart.s.close()
 
 class Chart:
   def __init__(self):
     stream_ids = tls.get_credentials_file()['stream_ids']
     self.charts = []
-    methods = [structure.getHartRate, structure.getNumSteps, structure.getTemperature, structure.getHumidity]
-    title = ["Hart Rate", "Steps", "Air Temperature", "Humidity"]
-    filename = ["HartRate", "Steps", "AirTemperature", "Humidity"]
+    methods = [structure.getBodyTemperature, 
+      structure.getHartRate,
+      structure.getNumSteps,
+      structure.getDistance,
+      structure.getTemperature,
+      structure.getHumidity,
+      structure.getTreasure]
+    title = ["Body Temperature", "Heart Rate", "Steps", "Distance", "Air Temperature", "Humidity", "Treasure"]
+    filename = ["BodyTemperature", "HeartRate", "Steps", "Distance", "AirTemperature", "Humidity", "Treasure"]
     num = 0
     for stream_id in stream_ids:
       # Make instance of stream id object 
@@ -122,7 +127,11 @@ class Chart:
 
   def run(self):
     t = []
+    num = 0
     for chart in self.charts:
+      if num==6:
+        continue
+      num += 1
       tr = ChartRender(chart)
       t.append(tr)
       tr.start()
@@ -137,11 +146,13 @@ class MyHandler(BaseHTTPRequestHandler):
   def parse(self, parsed):
     rez = []
     try:
-      rez.append(float(urlparse.parse_qs(parsed.query)['time'][0]))
+      rez.append(long(urlparse.parse_qs(parsed.query)['time'][0]))
     except:
       pass
     try:
-      rez.append(float(urlparse.parse_qs(parsed.query)['value'][0]))
+      x = float(urlparse.parse_qs(parsed.query)['value'][0])
+      print x
+      rez.append(x)
     except:
       pass
     try:
@@ -175,6 +186,16 @@ class MyHandler(BaseHTTPRequestHandler):
 
     url = self.path
     parsed = urlparse.urlparse(url)
+    structure.updateStart(parsed)
+
+    if string.find(self.path, "/resetStation") != -1:
+      try:
+        # TODO: do some stuff
+        self.sendResponse(self, 200, "")
+      except:
+        self.sendResponse(self, 400, "")
+        traceback.print_exc(file=sys.stdout)
+      return
 
     if string.find(self.path, "/putBodyTemp") != -1:
       try:
@@ -234,7 +255,7 @@ class MyHandler(BaseHTTPRequestHandler):
       try:
         time = float(urlparse.parse_qs(parsed.query)['time'][0])
         checkpoint = float(urlparse.parse_qs(parsed.query)['checkpoint'][0])
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
+        value = urlparse.parse_qs(parsed.query)['value'][0]
         name = urlparse.parse_qs(parsed.query)['name'][0]
         structure.addTreasure(time, checkpoint, value, name)
         self.sendResponse(self, 200, "")

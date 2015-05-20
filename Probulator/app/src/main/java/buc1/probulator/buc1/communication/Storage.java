@@ -408,8 +408,9 @@ public class Storage extends Observable implements Serializable {
 
                             heartRate.add(Double.parseDouble(data));
                             heartRateTimestamps.add(timestamp);
-
-                            heartRateSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            synchronized (heartRateSeries) {
+                                heartRateSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            }
 
                             continue;
                         }
@@ -430,8 +431,9 @@ public class Storage extends Observable implements Serializable {
 
                             humidity.add(Double.parseDouble(data));
                             humidityTimestamps.add(timestamp);
-
-                            humiditySeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            synchronized (humiditySeries) {
+                                humiditySeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            }
 
                             continue;
                         }
@@ -452,8 +454,9 @@ public class Storage extends Observable implements Serializable {
 
                             airTemperature.add(Double.parseDouble(data));
                             airTemperatureTimestamps.add(timestamp);
-
-                            airTemperatureSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            synchronized (airTemperatureSeries) {
+                                airTemperatureSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            }
 
                             continue;
                         }
@@ -474,8 +477,9 @@ public class Storage extends Observable implements Serializable {
 
                             bodyTemperature.add(Double.parseDouble(data));
                             bodyTemperatureTimestamps.add(timestamp);
-
-                            bodyTemperatureSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            synchronized (bodyTemperatureSeries) {
+                                bodyTemperatureSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            }
 
                             continue;
                         }
@@ -496,8 +500,9 @@ public class Storage extends Observable implements Serializable {
 
                             consumption.add(Double.parseDouble(data));
                             consumptionTimestamps.add(timestamp);
-
-                            consumptionSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            synchronized (consumptionSeries) {
+                                consumptionSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+                            }
 
                             continue;
                         }

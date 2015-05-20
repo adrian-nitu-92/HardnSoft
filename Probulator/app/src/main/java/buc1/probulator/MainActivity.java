@@ -41,39 +41,43 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        try {
+            setContentView(R.layout.activity_main);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
+            mNavigationDrawerFragment = (NavigationDrawerFragment)
+                    getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+            mTitle = getTitle();
 
-        mNavigationDrawerFragment.setUp (
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+            mNavigationDrawerFragment.setUp(
+                    R.id.navigation_drawer,
+                    (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        Storage storage = Storage.getInstance(this);
-        new Updater(storage).start();
+            Storage storage = Storage.getInstance(this);
+            new Updater(storage).start();
 
-        stepsFragment = StepsFragment.newInstance();
-        storage.addObserver(stepsFragment);
+            stepsFragment = StepsFragment.newInstance();
+            storage.addObserver(stepsFragment);
 
-        heartRateFragment = HeartRateFragment.newInstance();
-        storage.addObserver(heartRateFragment);
+            heartRateFragment = HeartRateFragment.newInstance();
+            storage.addObserver(heartRateFragment);
 
-        humidityFragment = HumidityFragment.newInstance();
-        storage.addObserver(humidityFragment);
+            humidityFragment = HumidityFragment.newInstance();
+            storage.addObserver(humidityFragment);
 
-        airTemperatureFragment = AirTemperatureFragment.newInstance();
-        storage.addObserver(airTemperatureFragment);
+            airTemperatureFragment = AirTemperatureFragment.newInstance();
+            storage.addObserver(airTemperatureFragment);
 
-        bodyTemperatureFragment =  BodyTemperatureFragment.newInstance();
-        storage.addObserver(bodyTemperatureFragment);
+            bodyTemperatureFragment = BodyTemperatureFragment.newInstance();
+            storage.addObserver(bodyTemperatureFragment);
 
-        treasureFragment = TreasureFragment.newInstance();
-        storage.addObserver(treasureFragment);
+            treasureFragment = TreasureFragment.newInstance();
+            storage.addObserver(treasureFragment);
 
-        consumptionFragment = ConsumptionFragment.newInstance();
-        storage.addObserver(consumptionFragment);
+            consumptionFragment = ConsumptionFragment.newInstance();
+            storage.addObserver(consumptionFragment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         //initializ pending intent
         //Intent open_activity_intent = new Intent(this, MainActivity.class);
@@ -83,37 +87,40 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+        try {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        switch (position) {
-            case 0:
-                transaction.replace(R.id.container, StepsFragment.newInstance());
-                break;
-            case 1:
-                transaction.replace(R.id.container, HeartRateFragment.newInstance());
-                break;
-            case 2:
-                transaction.replace(R.id.container, HumidityFragment.newInstance());
-                break;
-            case 3:
-                transaction.replace(R.id.container, AirTemperatureFragment.newInstance());
-                break;
-            case 4:
-                transaction.replace(R.id.container, BodyTemperatureFragment.newInstance());
-                break;
-            case 5:
-                transaction.replace(R.id.container, ConsumptionFragment.newInstance());
-                break;
-            case 6:
-                transaction.replace(R.id.container, TreasureFragment.newInstance());
-                break;
-            case 7:
-                transaction.replace(R.id.container, new SettingsFragment());
-                break;
+            switch (position) {
+                case 0:
+                    transaction.replace(R.id.container, StepsFragment.newInstance());
+                    break;
+                case 1:
+                    transaction.replace(R.id.container, HeartRateFragment.newInstance());
+                    break;
+                case 2:
+                    transaction.replace(R.id.container, HumidityFragment.newInstance());
+                    break;
+                case 3:
+                    transaction.replace(R.id.container, AirTemperatureFragment.newInstance());
+                    break;
+                case 4:
+                    transaction.replace(R.id.container, BodyTemperatureFragment.newInstance());
+                    break;
+                case 5:
+                    transaction.replace(R.id.container, ConsumptionFragment.newInstance());
+                    break;
+                case 6:
+                    transaction.replace(R.id.container, TreasureFragment.newInstance());
+                    break;
+                case 7:
+                    transaction.replace(R.id.container, new SettingsFragment());
+                    break;
+            }
+            transaction.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        transaction.commit();
     }
 
     public void setTitle(String title) {
@@ -121,19 +128,28 @@ public class MainActivity extends ActionBarActivity
     }
 
     public void restoreActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setTitle(mTitle);
+        try {
+            ActionBar actionBar = getSupportActionBar();
+            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setTitle(mTitle);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            getMenuInflater().inflate(R.menu.main, menu);
-            restoreActionBar();
-            return true;
+        try {
+            if (!mNavigationDrawerFragment.isDrawerOpen()) {
+                getMenuInflater().inflate(R.menu.main, menu);
+                restoreActionBar();
+                return true;
+            }
+            return super.onCreateOptionsMenu(menu);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return super.onCreateOptionsMenu(menu);
+        return false;
     }
 }

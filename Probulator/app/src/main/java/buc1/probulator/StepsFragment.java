@@ -15,6 +15,7 @@ import java.util.Observer;
 
 import buc1.probulator.buc1.communication.DataUnit;
 import buc1.probulator.buc1.communication.Storage;
+import buc1.probulator.storage.SettingsStorage;
 
 
 public class StepsFragment extends Fragment implements Observer {
@@ -79,6 +80,20 @@ public class StepsFragment extends Fragment implements Observer {
 
         TextView dist = (TextView) view.findViewById(R.id.distance_val_tv);
         dist.setText(distance + " m");
+
+        SettingsStorage settingsStorage = SettingsStorage.getInstance(stepsFragment.getActivity());
+        double nrCals = 0;
+        if (settingsStorage.getSex() == SettingsStorage.Sex.FEMALE) {
+            nrCals = 665.09 + (9.56 * settingsStorage.getWeightKg()) +
+                    (1.84 * settingsStorage.getHeightCm()) -
+                    (4.67 * settingsStorage.getAge());
+        } else {
+            nrCals = 66.47 + (13.75 * settingsStorage.getWeightKg()) +
+                    (5 * settingsStorage.getHeightCm()) -
+                    (6.75 * settingsStorage.getAge());
+        }
+        nrCals *= 2;
+        ((TextView) view.findViewById(R.id.calories)).setText(nrCals + " calories burned");
     }
 
     @Override

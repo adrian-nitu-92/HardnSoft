@@ -82,13 +82,21 @@ public class HeartRateFragment extends Fragment implements Observer {
         super.onStart();
         //setupChart();
         //addAllValues();
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void appendDataToGraph() {
@@ -113,7 +121,11 @@ public class HeartRateFragment extends Fragment implements Observer {
             e.printStackTrace();
         }
 
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -122,7 +134,11 @@ public class HeartRateFragment extends Fragment implements Observer {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
                         //appendDataToGraph();
-                        mChart.repaint();
+                        try {
+                            mChart.repaint();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -169,6 +185,7 @@ public class HeartRateFragment extends Fragment implements Observer {
         multiRenderer.setInScroll(true);
 
         multiRenderer.addSeriesRenderer(visitsRenderer);
+        multiRenderer.setDisplayChartValues(false);
 
         LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.chart_container);
         mChart = (GraphicalView) ChartFactory.getTimeChartView(getActivity().getBaseContext(), dataset, multiRenderer, "hh:mm:ss");
@@ -197,6 +214,10 @@ public class HeartRateFragment extends Fragment implements Observer {
             e.printStackTrace();
         }
 
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

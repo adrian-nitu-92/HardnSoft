@@ -80,13 +80,21 @@ public class HumidityFragment extends Fragment implements Observer {
     @Override
     public void onStart() {
         super.onStart();
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -95,7 +103,11 @@ public class HumidityFragment extends Fragment implements Observer {
             try {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        mChart.repaint();
+                        try {
+                            mChart.repaint();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
                     }
                 });
@@ -144,6 +156,7 @@ public class HumidityFragment extends Fragment implements Observer {
         multiRenderer.setInScroll(true);
 
         multiRenderer.addSeriesRenderer(visitsRenderer);
+        multiRenderer.setDisplayChartValues(false);
 
         LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.humidity_chart_container);
         mChart = (GraphicalView) ChartFactory.getTimeChartView(getActivity().getBaseContext(), dataset, multiRenderer, "hh:mm:ss");

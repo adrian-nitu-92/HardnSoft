@@ -117,30 +117,37 @@ public class NavigationDrawerFragment extends Fragment {
         HashMap<String, String> hm;
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.nicewalk));
         hm.put(TEXT, "Walk");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.heartrate));
         hm.put(TEXT, "Heartrate");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.humidity));
         hm.put(TEXT, "Humidity");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.envtemp));
         hm.put(TEXT, "Air temperature");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.temp));
         hm.put(TEXT, "Body temperature");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.consumption));
         hm.put(TEXT, "Consumption");
         mList.add(hm);
 
         hm = new HashMap<String, String>();
+        hm.put(ICON, Integer.toString(R.drawable.treasure));
         hm.put(TEXT, "Treasures");
         mList.add(hm);
 

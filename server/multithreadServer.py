@@ -146,11 +146,13 @@ class MyHandler(BaseHTTPRequestHandler):
   def parse(self, parsed):
     rez = []
     try:
-      rez.append(float(urlparse.parse_qs(parsed.query)['time'][0]))
+      rez.append(long(urlparse.parse_qs(parsed.query)['time'][0]))
     except:
       pass
     try:
-      rez.append(float(urlparse.parse_qs(parsed.query)['value'][0]))
+      x = float(urlparse.parse_qs(parsed.query)['value'][0])
+      print x
+      rez.append(x)
     except:
       pass
     try:
@@ -184,6 +186,16 @@ class MyHandler(BaseHTTPRequestHandler):
 
     url = self.path
     parsed = urlparse.urlparse(url)
+    structure.updateStart(parsed)
+
+    if string.find(self.path, "/resetStation") != -1:
+      try:
+        # TODO: do some stuff
+        self.sendResponse(self, 200, "")
+      except:
+        self.sendResponse(self, 400, "")
+        traceback.print_exc(file=sys.stdout)
+      return
 
     if string.find(self.path, "/putBodyTemp") != -1:
       try:
@@ -243,7 +255,7 @@ class MyHandler(BaseHTTPRequestHandler):
       try:
         time = float(urlparse.parse_qs(parsed.query)['time'][0])
         checkpoint = float(urlparse.parse_qs(parsed.query)['checkpoint'][0])
-        value = float(urlparse.parse_qs(parsed.query)['value'][0])
+        value = urlparse.parse_qs(parsed.query)['value'][0]
         name = urlparse.parse_qs(parsed.query)['name'][0]
         structure.addTreasure(time, checkpoint, value, name)
         self.sendResponse(self, 200, "")

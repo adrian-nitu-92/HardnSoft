@@ -24,27 +24,27 @@ class MyThread(threading.Thread):
   def sendRequest(self):
     from random import randint
     conn = httplib.HTTPConnection(ROOT)
-    conn.request("GET","/putBodyTemp?value="+str(randint(-100,100))+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putBodyTemp?value="+str(randint(-100,100))+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print "putBodyTemp: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print "putHeartRate: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putNumSteps?value="+str(self.nrSteps)+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putNumSteps?value="+str(self.nrSteps)+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print " putNumSteps: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putDistance?value="+str(self.distance)+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putDistance?value="+str(self.distance)+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print "putDistance: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putAirTemp?value="+str(randint(2,9))+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putAirTemp?value="+str(randint(2,9))+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print "putAirTemp: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print "putHumidity: ", self.id, " ---- ", res.status, res.reason
     
@@ -52,7 +52,7 @@ class MyThread(threading.Thread):
     res = conn.getresponse()
     print "putTreasure: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putConsumption?value="+str(randint(-100,100))+"&time="+str(time.time())+"&statie=x")
+    conn.request("GET","/putConsumption?value="+str(randint(-100,100))+"&time="+str(time.time()*1000)+"&statie=x")
     res = conn.getresponse()
     print "putConsumption: ", self.id, " ---- ", res.status, res.reason
     print "..............................................................."

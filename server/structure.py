@@ -1,6 +1,7 @@
 import time
 from threading import Thread, Lock
 import os
+import urlparse
 
 
 class Treasure:
@@ -11,13 +12,16 @@ class Treasure:
     self.name = name
 
   def toString(self):
-    message = str(self.timestamp) + " " + str(self.checkpoint) + " " + str(self.value) + " " + self.name
+    message = str(self.timestamp) + " " + str(self.checkpoint) + " " + self.value + " " + self.name
     return message
 
 #This class is thread safe
 #Each method is thread safe -> do not call them after lock.acquire()
 class Structure:
   def __init__(self):
+    self.timeStart = None
+    self.mutexTimeStart = Lock()
+
     self.bodyTemperature = []
     self.mutexBodyTemperature = Lock()
 
@@ -42,6 +46,15 @@ class Structure:
 
     self.consumption = []
     self.mutexConsumption = Lock()
+
+  def updateStart(self, parsed):
+    self.mutexTimeStart.acquire()
+    if self.timeStart == None:
+      try:
+        self.timeStart = float(urlparse.parse_qs(parsed.query)['time'][0])
+      except:
+        pass
+    self.mutexTimeStart.release()
 
   def getBodyTemperature(self):
     self.mutexBodyTemperature.acquire()

@@ -49,19 +49,24 @@ class ChartRender(threading.Thread):
       points = [point for point in inputPoints if point[0] > maxTimestap]
       if (len(points)): 
         maxTimestap = points[len(points)-1][0]
-        print "@@@@@@@@@@@@@@@@@@@@@@@@@ ", points
         for point in points:
           self.chart.s.write(dict(x=point[0], y=point[1]))
-      time.sleep(10)
+      time.sleep(1)
     self.chart.s.close()
 
 class Chart:
   def __init__(self):
     stream_ids = tls.get_credentials_file()['stream_ids']
     self.charts = []
-    methods = [structure.getHartRate, structure.getNumSteps, structure.getTemperature, structure.getHumidity]
-    title = ["Hart Rate", "Steps", "Air Temperature", "Humidity"]
-    filename = ["HartRate", "Steps", "AirTemperature", "Humidity"]
+    methods = [structure.getBodyTemperature, 
+      structure.getHartRate,
+      structure.getNumSteps,
+      structure.getDistance,
+      structure.getTemperature,
+      structure.getHumidity,
+      structure.getTreasure]
+    title = ["Body Temperature", "Heart Rate", "Steps", "Distance", "Air Temperature", "Humidity", "Treasure"]
+    filename = ["BodyTemperature", "HeartRate", "Steps", "Distance", "AirTemperature", "Humidity", "Treasure"]
     num = 0
     for stream_id in stream_ids:
       # Make instance of stream id object 
@@ -122,7 +127,11 @@ class Chart:
 
   def run(self):
     t = []
+    num = 0
     for chart in self.charts:
+      if num==6:
+        continue
+      num += 1
       tr = ChartRender(chart)
       t.append(tr)
       tr.start()

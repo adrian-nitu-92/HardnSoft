@@ -2,6 +2,10 @@ package buc1.probulator.buc1.communication;
 
 import org.achartengine.chart.TimeChart;
 import org.achartengine.model.TimeSeries;
+import android.app.Notification;
+import android.content.Context;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 
 import java.io.Serializable;
 import java.sql.Time;
@@ -12,6 +16,9 @@ import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.StringTokenizer;
+
+import buc1.probulator.R;
+import buc1.probulator.TreasureFragment;
 
 public class Storage extends Observable implements Serializable {
     private ArrayList<Observer> observers;
@@ -51,9 +58,17 @@ public class Storage extends Observable implements Serializable {
 
     private ArrayList<TreasureInfo> treasures;
 
+    private Context context;
+    // EXPERIMENTAL NOTIFICATIONS PART
+    private int notification_id = 1;
+    private final String NOTIFICATION_ID = "notification_id";
+    /* These are the classes you use to start the notification */
+    private NotificationCompat.Builder notification_builder;
+    private NotificationManagerCompat notification_manager;
+
     private static Storage storage;
 
-    private Storage() {
+    private Storage(Context c) {
         store = new HashMap<>();
         parser = new ReplyParser();
         observers = new ArrayList<>();
@@ -91,11 +106,13 @@ public class Storage extends Observable implements Serializable {
         airTemperatureSeries = new TimeSeries("Air temperature");
         bodyTemperatureSeries = new TimeSeries("Body temperature");
         consumptionSeries = new TimeSeries("Energy consumption");
+
+        context = c;
     }
 
-    public static Storage getInstance(){
+    public static Storage getInstance(Context c){
         if (storage == null) {
-            storage = new Storage();
+            storage = new Storage(c);
         }
 
         return storage;
@@ -241,6 +258,19 @@ public class Storage extends Observable implements Serializable {
     public void notifyObservers(Object arg) {
         for (Observer o : observers) {
             o.update(this, arg);
+            if (o instanceof TreasureFragment) {
+                //create the notification
+                notification_builder = new NotificationCompat.Builder(context)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Treasure!")
+                        .setContentText("Hey Terrance, we've found treasah`!")
+                        .setDefaults(Notification.DEFAULT_ALL)
+                        .setAutoCancel(true);
+
+                notification_manager = NotificationManagerCompat.from(context);
+
+                notification_manager.notify(notification_id, notification_builder.build());
+            }
         }
     }
 

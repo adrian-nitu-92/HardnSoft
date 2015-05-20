@@ -1,5 +1,10 @@
 package buc1.probulator;
 
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.FragmentManager;
@@ -46,7 +51,7 @@ public class MainActivity extends ActionBarActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        Storage storage = Storage.getInstance();
+        Storage storage = Storage.getInstance(this);
         new Updater(storage).start();
 
         stepsFragment = StepsFragment.newInstance();
@@ -69,6 +74,11 @@ public class MainActivity extends ActionBarActivity
 
         consumptionFragment = ConsumptionFragment.newInstance();
         storage.addObserver(consumptionFragment);
+
+        //initializ pending intent
+        //Intent open_activity_intent = new Intent(this, MainActivity.class);
+        //open_activity_intent.putExtra(NOTIFICATION_ID, notification_id);
+        //PendingIntent pending_intent = PendingIntent.getActivity(this, 0, open_activity_intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     @Override

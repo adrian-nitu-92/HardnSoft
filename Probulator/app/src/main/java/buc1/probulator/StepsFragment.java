@@ -64,7 +64,7 @@ public class StepsFragment extends Fragment implements Observer {
     }
 
     private void addStepsNumber() {
-        Storage store = Storage.getInstance();
+        Storage store = Storage.getInstance(getActivity());
         int numSteps = store.getNumSteps();
         int distance = store.getDistance();
 

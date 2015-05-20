@@ -101,7 +101,7 @@ public class BodyTemperatureFragment extends Fragment implements Observer {
 
     private void setupChart(){
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(Storage.getInstance().getBodyTemperatureSeries());
+        dataset.addSeries(Storage.getInstance(getActivity()).getBodyTemperatureSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.MAGENTA);

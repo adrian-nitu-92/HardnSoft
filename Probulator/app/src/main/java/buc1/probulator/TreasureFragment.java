@@ -1,9 +1,15 @@
 package buc1.probulator;
 
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.Fragment;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +53,7 @@ public class TreasureFragment extends Fragment implements Observer {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        Storage storage = Storage.getInstance();
+        Storage storage = Storage.getInstance(getActivity());
         adapter = new TreasureArrayAdapter(getActivity(),
                 R.layout.layout_treasure_item, storage.getTreasures());
 

@@ -92,7 +92,7 @@ public class HeartRateFragment extends Fragment implements Observer {
     }
 
     private void appendDataToGraph() {
-        final Storage storage = Storage.getInstance();
+        final Storage storage = Storage.getInstance(getActivity());
         final ArrayList<Double> y = storage.getHeartRate();
         final ArrayList<Double> x = storage.getHeartRateTimestamps();
         final int lci = storage.getLastChunkIndex();
@@ -131,7 +131,7 @@ public class HeartRateFragment extends Fragment implements Observer {
 
     private void setupChart(){
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(Storage.getInstance().getHeartRateSeries());
+        dataset.addSeries(Storage.getInstance(getActivity()).getHeartRateSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.RED);
@@ -176,7 +176,7 @@ public class HeartRateFragment extends Fragment implements Observer {
     }
 
     public void addAllValues() {
-        final Storage storage = Storage.getInstance();
+        final Storage storage = Storage.getInstance(getActivity());
         final ArrayList<Double> y = storage.getHeartRate();
         final ArrayList<Double> x = storage.getHeartRateTimestamps();
         final int lci = storage.getLastChunkIndex();

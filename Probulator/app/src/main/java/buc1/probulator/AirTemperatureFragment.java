@@ -103,7 +103,7 @@ public class AirTemperatureFragment extends Fragment implements Observer {
 
     private void setupChart(){
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(Storage.getInstance().getAirTemperatureSeries());
+        dataset.addSeries(Storage.getInstance(getActivity()).getAirTemperatureSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.DKGRAY);

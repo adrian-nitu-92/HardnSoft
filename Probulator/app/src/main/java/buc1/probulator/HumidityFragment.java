@@ -106,7 +106,7 @@ public class HumidityFragment extends Fragment implements Observer {
 
     private void setupChart(){
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(Storage.getInstance().getHumiditySeries());
+        dataset.addSeries(Storage.getInstance(getActivity()).getHumiditySeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.BLUE);

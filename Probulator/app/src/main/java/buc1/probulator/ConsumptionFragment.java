@@ -101,7 +101,7 @@ public class ConsumptionFragment extends Fragment implements Observer {
 
     private void setupChart(){
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(Storage.getInstance().getConsumptionSeries());
+        dataset.addSeries(Storage.getInstance(getActivity()).getConsumptionSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.GREEN);

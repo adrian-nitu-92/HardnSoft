@@ -2,6 +2,8 @@ package buc1.probulator.buc1.communication;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
@@ -15,6 +17,9 @@ public class Storage extends Observable implements Serializable {
     private int numSteps;
     private double numStepsTimestamp;
 
+    private int distance;
+    private double distanceTimestamp;
+
     private ArrayList<Double> heartRate;
     private ArrayList<Double> heartRateTimestamps;
     private int lastChunkIndex;
@@ -26,6 +31,14 @@ public class Storage extends Observable implements Serializable {
     private ArrayList<Double> airTemperature;
     private ArrayList<Double> airTemperatureTimestamps;
     private int airTemperatureLastChunkIndex;
+
+    private ArrayList<Double> bodyTemperature;
+    private ArrayList<Double> bodyTemperatureTimestamps;
+    private int bodyTemperatureLastChunkIndex;
+
+    private ArrayList<Double> consumption;
+    private ArrayList<Double> consumptionTimestamps;
+    private int consumptionLastChunkIndex;
 
     private ArrayList<TreasureInfo> treasures;
 
@@ -39,6 +52,9 @@ public class Storage extends Observable implements Serializable {
         numSteps = 0;
         numStepsTimestamp = 0;
 
+        distance = 0;
+        distanceTimestamp = 0;
+
         heartRate = new ArrayList<>();
         heartRateTimestamps = new ArrayList<>();
         lastChunkIndex = 0;
@@ -50,6 +66,14 @@ public class Storage extends Observable implements Serializable {
         airTemperature = new ArrayList<>();
         airTemperatureTimestamps = new ArrayList<>();
         airTemperatureLastChunkIndex = 0;
+
+        bodyTemperature = new ArrayList<>();
+        bodyTemperatureTimestamps = new ArrayList<>();
+        bodyTemperatureLastChunkIndex = 0;
+
+        consumption = new ArrayList<>();
+        consumptionTimestamps = new ArrayList<>();
+        consumptionLastChunkIndex = 0;
 
         treasures = new ArrayList<>();
     }
@@ -70,8 +94,10 @@ public class Storage extends Observable implements Serializable {
 
         System.out.println("[NUM STEPS] " + getNumSteps());
         System.out.println("[HEARTRATE] " + getHeartRate());
-        System.out.println("[HUMIDITY] " + getHeartRate());
+        System.out.println("[HUMIDITY] " + getHumidity());
         System.out.println("[AIR TEMPERATURE] " + getAirTemperature());
+        System.out.println("[BODY TEMPERATURE] " + getBodyTemperature());
+        System.out.println("[CONSUMPTION] " + getConsumption());
     }
 
     public int getNumSteps() {
@@ -80,6 +106,14 @@ public class Storage extends Observable implements Serializable {
 
     public double getNumStepsTimestamp() {
         return numStepsTimestamp;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public double getDistanceTimestamp() {
+        return distanceTimestamp;
     }
 
     public ArrayList<Double> getHeartRate() {
@@ -128,6 +162,38 @@ public class Storage extends Observable implements Serializable {
 
     public void incAirTemperatureLastChunkIndex() {
         airTemperatureLastChunkIndex++;
+    }
+
+    public ArrayList<Double> getBodyTemperature() {
+        return bodyTemperature;
+    }
+
+    public ArrayList<Double> getBodyTemperatureTimestamps() {
+        return bodyTemperatureTimestamps;
+    }
+
+    public int getBodyTemperatureLastChunkIndex() {
+        return bodyTemperatureLastChunkIndex;
+    }
+
+    public void incBodyTemperatureLastChunkIndex() {
+        bodyTemperatureLastChunkIndex++;
+    }
+
+    public ArrayList<Double> getConsumption() {
+        return bodyTemperature;
+    }
+
+    public ArrayList<Double> getConsumptionTimestamps() {
+        return bodyTemperatureTimestamps;
+    }
+
+    public int getConsumptionLastChunkIndex() {
+        return bodyTemperatureLastChunkIndex;
+    }
+
+    public void incConsumptionLastChunkIndex() {
+        bodyTemperatureLastChunkIndex++;
     }
 
     public ArrayList<TreasureInfo> getTreasures() {
@@ -186,6 +252,13 @@ public class Storage extends Observable implements Serializable {
         private ReplyParser() {
         }
 
+        public Calendar parseTimestamp(double timestamp) {
+            Calendar c = Calendar.getInstance();
+            c.setTime(new Date((long)timestamp));
+
+            return c;
+        }
+
         public void parse(String string) {
             if (string == null || "".equals(string)) {
                 return;
@@ -230,6 +303,24 @@ public class Storage extends Observable implements Serializable {
 
                     numSteps = (int) Double.parseDouble(data);
                     numStepsTimestamp = timestamp;
+
+                    continue;
+                }
+
+                if (key.equals("distance")) {
+                    String unit = valueTokenizer.nextToken();
+
+                    if (unit == null || "".equals(unit)) {
+                        continue;
+                    }
+
+                    StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                    Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                    String data = unitTokenizer.nextToken();
+
+                    distance = (int) Double.parseDouble(data);
+                    distanceTimestamp = timestamp;
 
                     continue;
                 }
@@ -294,6 +385,26 @@ public class Storage extends Observable implements Serializable {
                     }
                 }
 
+                if (key.equals("bodytemperature")) {
+                    while (valueTokenizer.hasMoreTokens()) {
+                        String unit = valueTokenizer.nextToken();
+
+                        if (unit == null || "".equals(unit)) {
+                            continue;
+                        }
+
+                        StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                        Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                        String data = unitTokenizer.nextToken();
+
+                        bodyTemperature.add(Double.parseDouble(data));
+                        bodyTemperatureTimestamps.add(timestamp);
+
+                        continue;
+                    }
+                }
+
                 if (key.equals("treasure")) {
                     while (valueTokenizer.hasMoreTokens()) {
                         String unit = valueTokenizer.nextToken();
@@ -314,10 +425,7 @@ public class Storage extends Observable implements Serializable {
                         continue;
                     }
                 }
-
-
             }
-
         }
     }
 }

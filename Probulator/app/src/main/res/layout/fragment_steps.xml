@@ -6,20 +6,60 @@
     android:gravity="center">
 
     <RelativeLayout
-        android:id="@+id/steps_number_field"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/FieldRelativeLayout">
+        android:layout_centerInParent="true"
+        android:id="@+id/relativeLayout">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="400dp"
+            android:layout_height="400dp"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/circular_progress_bar"
+            android:background="@drawable/circular_shape"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="75"
+            android:layout_centerHorizontal="true" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/linearLayout">
+
+        </RelativeLayout>
 
         <TextView
-            android:text="Label"
-            android:id="@+id/steps_number_label"
-            style="@style/LabelTextView"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 steps"
+            android:id="@+id/steps_tv"
+            style="@android:style/TextAppearance.Large"
+            android:layout_marginTop="68dp"
+            android:layout_below="@+id/distance_val_tv"
+            android:layout_alignRight="@+id/distance_tv"
+            android:layout_alignEnd="@+id/distance_tv" />
 
         <TextView
-            android:id="@+id/steps_number_value"
-            android:text="Value"
-            style="@style/ValueTextView"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Distance"
+            android:id="@+id/distance_tv"
+            android:layout_marginTop="93dp"
+            style="@android:style/TextAppearance.Large"
+            android:layout_below="@+id/linearLayout"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 m"
+            android:id="@+id/distance_val_tv"
+            android:layout_below="@+id/distance_tv"
+            android:layout_alignRight="@+id/steps_tv"
+            android:layout_alignEnd="@+id/steps_tv"
+            style="@android:style/TextAppearance.Large"/>
     </RelativeLayout>
-
 </RelativeLayout>

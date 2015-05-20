@@ -5,6 +5,49 @@
     android:orientation="vertical"
     tools:context="buc1.probulator.TreasureFragment">
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
+        android:background="@color/accent_material_light">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:gravity="center"
+            android:layout_gravity="left"
+            android:paddingLeft="40dp"
+            android:text="Name"
+            android:textColor="@color/abc_primary_text_material_light"
+            android:id="@+id/treasure_name"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:gravity="center"
+            android:text="Value"
+            android:textColor="@color/abc_primary_text_material_light"
+            android:paddingRight="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/treasure_value"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Checkpoint"
+            android:id="@+id/treasure_checkpoint"
+            android:layout_centerVertical="true"
+            android:textColor="@color/abc_primary_text_material_light"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

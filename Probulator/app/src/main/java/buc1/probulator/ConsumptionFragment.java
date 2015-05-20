@@ -12,14 +12,12 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
-import org.achartengine.model.TimeSeries;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
@@ -28,9 +26,9 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import buc1.probulator.buc1.communication.Storage;
 
 
-public class HeartRateFragment extends Fragment implements Observer {
+public class ConsumptionFragment extends Fragment implements Observer {
 
-    private static HeartRateFragment fragment;
+    private static ConsumptionFragment fragment;
 
     private GraphicalView mChart;
 
@@ -41,31 +39,27 @@ public class HeartRateFragment extends Fragment implements Observer {
     private XYMultipleSeriesRenderer multiRenderer;
 
 
-    public static HeartRateFragment newInstance() {
+    public static ConsumptionFragment newInstance() {
         if (fragment== null) {
-            fragment = new HeartRateFragment();
+            fragment = new ConsumptionFragment();
             Bundle args = new Bundle();
             fragment.setArguments(args);
         }
         return fragment;
     }
 
-    public HeartRateFragment() {
-        // Required empty public constructor
+    public ConsumptionFragment() {
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_heart_rate, container, false);
+        return inflater.inflate(R.layout.fragment_consumption, container, false);
     }
 
     public void onAttach(Activity activity) {
@@ -91,14 +85,15 @@ public class HeartRateFragment extends Fragment implements Observer {
 
     private void appendDataToGraph() {
         final Storage storage = Storage.getInstance();
-        final ArrayList<Double> y = storage.getHeartRate();
-        final ArrayList<Double> x = storage.getHeartRateTimestamps();
-        final int lci = storage.getLastChunkIndex();
+        final ArrayList<Double> y = storage.getConsumption();
+        final ArrayList<Double> x = storage.getConsumptionTimestamps();
+        final int lci = storage.getConsumptionLastChunkIndex();
+
 
         Thread t = new Thread() {
             public void run() {
                 for (int i = lci; i < x.size(); i++) {
-                    storage.incLastChunkIndex();
+                    storage.incConsumptionLastChunkIndex();
                     visitsSeries.add(x.get(i), y.get(i));
                 }
             }
@@ -110,7 +105,6 @@ public class HeartRateFragment extends Fragment implements Observer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
         mChart.repaint();
     }
 
@@ -121,6 +115,7 @@ public class HeartRateFragment extends Fragment implements Observer {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
                         appendDataToGraph();
+
                     }
                 });
             } catch (Exception e) {
@@ -130,22 +125,22 @@ public class HeartRateFragment extends Fragment implements Observer {
     }
 
     private void setupChart(){
-        visitsSeries = new XYSeries("Heartrate");
+        visitsSeries = new XYSeries("Consumption");
 
         dataset = new XYMultipleSeriesDataset();
         dataset.addSeries(visitsSeries);
 
         visitsRenderer = new XYSeriesRenderer();
-        visitsRenderer.setColor(Color.RED);
+        visitsRenderer.setColor(Color.DKGRAY);
         visitsRenderer.setPointStyle(PointStyle.CIRCLE);
         visitsRenderer.setFillPoints(true);
         visitsRenderer.setLineWidth(2);
         visitsRenderer.setDisplayChartValues(true);
 
         multiRenderer = new XYMultipleSeriesRenderer();
-        multiRenderer.setChartTitle("HeartRate");
+        multiRenderer.setChartTitle("Consumption");
         multiRenderer.setXTitle("Time");
-        multiRenderer.setYTitle("Heartrate");
+        multiRenderer.setYTitle("Consumption");
 
         multiRenderer.setChartTitleTextSize(50);
         multiRenderer.setLegendTextSize(10);
@@ -172,17 +167,17 @@ public class HeartRateFragment extends Fragment implements Observer {
 
         multiRenderer.addSeriesRenderer(visitsRenderer);
 
-        LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.chart_container);
+        LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.consumption_chart_container);
         mChart = (GraphicalView) ChartFactory.getLineChartView(getActivity().getBaseContext(), dataset, multiRenderer);
         chartContainer.addView(mChart);
     }
 
     public void addAllValues() {
         final Storage storage = Storage.getInstance();
-        final ArrayList<Double> y = storage.getHeartRate();
-        final ArrayList<Double> x = storage.getHeartRateTimestamps();
-        final int lci = storage.getLastChunkIndex();
-        int start = lci < 40? 0 : lci - 40;
+        final ArrayList<Double> y = storage.getConsumption();
+        final ArrayList<Double> x = storage.getConsumptionTimestamps();
+        final int lci = storage.getConsumptionLastChunkIndex();
+        final int start = lci < 40? 0 : lci - 40;
 
         Thread t = new Thread() {
             public void run() {
@@ -198,7 +193,6 @@ public class HeartRateFragment extends Fragment implements Observer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
         mChart.repaint();
     }
 }

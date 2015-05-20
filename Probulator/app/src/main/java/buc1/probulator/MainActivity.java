@@ -28,7 +28,9 @@ public class MainActivity extends ActionBarActivity
     private HeartRateFragment heartRateFragment;
     private HumidityFragment humidityFragment;
     private AirTemperatureFragment airTemperatureFragment;
+    private BodyTemperatureFragment bodyTemperatureFragment;
     private TreasureFragment treasureFragment;
+    private ConsumptionFragment consumptionFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +60,14 @@ public class MainActivity extends ActionBarActivity
         airTemperatureFragment = AirTemperatureFragment.newInstance();
         storage.addObserver(airTemperatureFragment);
 
+        bodyTemperatureFragment =  BodyTemperatureFragment.newInstance();
+        storage.addObserver(bodyTemperatureFragment);
+
         treasureFragment = TreasureFragment.newInstance();
         storage.addObserver(treasureFragment);
+
+        consumptionFragment = ConsumptionFragment.newInstance();
+        storage.addObserver(consumptionFragment);
     }
 
     @Override
@@ -82,6 +90,12 @@ public class MainActivity extends ActionBarActivity
                 transaction.replace(R.id.container, AirTemperatureFragment.newInstance());
                 break;
             case 4:
+                transaction.replace(R.id.container, BodyTemperatureFragment.newInstance());
+                break;
+            case 5:
+                transaction.replace(R.id.container, ConsumptionFragment.newInstance());
+                break;
+            case 6:
                 transaction.replace(R.id.container, TreasureFragment.newInstance());
                 break;
         }

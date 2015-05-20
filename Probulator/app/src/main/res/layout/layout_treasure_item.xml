@@ -16,19 +16,21 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="left"
+            android:paddingLeft="30dp"
             android:layout_gravity="left"
             android:text="Name"
             android:id="@+id/treasure_name" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:gravity="right"
-                android:text="Value"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"
-                android:id="@+id/treasure_value" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:gravity="right"
+            android:text="Value"
+            android:paddingRight="50dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/treasure_value" />
 
         <TextView
             android:layout_width="wrap_content"

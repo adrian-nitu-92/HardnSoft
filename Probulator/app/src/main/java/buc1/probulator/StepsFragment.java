@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.Observable;
@@ -58,24 +59,26 @@ public class StepsFragment extends Fragment implements Observer {
         super.onActivityCreated(savedInstanceState);
 
         View view = getView();
-        TextView label = (TextView) view.findViewById(R.id.steps_number_label);
-        TextView value = (TextView) view.findViewById(R.id.steps_number_value);
-
-        label.setText("Number of steps");
-        value.setText("0");
+        ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        progressBar.setMax(1000);
     }
 
     private void addStepsNumber() {
         Storage store = Storage.getInstance();
         int numSteps = store.getNumSteps();
+        int distance = store.getDistance();
 
         View view = getView();
-        TextView label = (TextView) view.findViewById(R.id.steps_number_label);
-        TextView value = (TextView) view.findViewById(R.id.steps_number_value);
 
-        label.setText("Number of steps");
-        System.out.println("Displaying steps " + numSteps);
-        value.setText(numSteps + "");
+        ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        progressBar.setProgress(numSteps);
+        progressBar.setMax(1000);
+
+        TextView steps = (TextView) view.findViewById(R.id.steps_tv);
+        steps.setText(numSteps + " steps");
+
+        TextView dist = (TextView) view.findViewById(R.id.distance_val_tv);
+        dist.setText(distance + " m");
     }
 
     @Override

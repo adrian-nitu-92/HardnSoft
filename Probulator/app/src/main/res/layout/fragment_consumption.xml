@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="buc1.probulator.HeartRateFragment">
+    tools:context="buc1.probulator.ConsumptionFragment">
 
     <RelativeLayout
         android:gravity="center"
@@ -12,7 +12,7 @@
         android:paddingBottom="20dp">
 
         <LinearLayout
-            android:id="@+id/chart_container"
+            android:id="@+id/consumption_chart_container"
             android:layout_width="match_parent"
             android:orientation="horizontal"
             android:layout_height="300dp"

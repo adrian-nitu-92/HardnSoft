@@ -116,7 +116,7 @@ public class NavigationDrawerFragment extends Fragment {
         HashMap<String, String> hm;
 
         hm = new HashMap<String,String>();
-        hm.put(TEXT, "Number of steps");
+        hm.put(TEXT, "Walk");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
@@ -129,6 +129,14 @@ public class NavigationDrawerFragment extends Fragment {
 
         hm = new HashMap<String,String>();
         hm.put(TEXT, "Air temperature");
+        mList.add(hm);
+
+        hm = new HashMap<String,String>();
+        hm.put(TEXT, "Body temperature");
+        mList.add(hm);
+
+        hm = new HashMap<String,String>();
+        hm.put(TEXT, "Consumption");
         mList.add(hm);
 
         hm = new HashMap<String, String>();

@@ -170,7 +170,7 @@ class Structure:
       self.treasure,
       self.mutexTreasure)
     #adaugam compumption: 
-    message += self._toString("comsumption",
+    message += self._toString("consumption",
       self.consumption,
       self.mutexConsumption)
     self.clear()

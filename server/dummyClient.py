@@ -24,42 +24,46 @@ class MyThread(threading.Thread):
   def sendRequest(self):
     from random import randint
     conn = httplib.HTTPConnection(ROOT)
-    conn.request("GET","/putBodyTemp?value="+str(randint(-100,100))+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putBodyTemp?value="+str(randint(-100,100))+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print "putBodyTemp: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putHeartRate?value="+str(self.id)+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print "putHeartRate: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putNumSteps?value="+str(self.nrSteps)+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putNumSteps?value="+str(self.nrSteps)+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print " putNumSteps: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putDistance?value="+str(self.distance)+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putDistance?value="+str(self.distance)+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print "putDistance: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putAirTemp?value="+str(randint(2,9))+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putAirTemp?value="+str(randint(2,9))+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print "putAirTemp: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putHumidity?value="+str(randint(-100,100))+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print "putHumidity: ", self.id, " ---- ", res.status, res.reason
     
-    conn.request("GET","/putTreasure?time="+str(time.time())+"&checkpoint="+str(randint(0,10))+"&value="+str(randint(-100,100))+"&name=dummy")
+    conn.request("GET","/putTreasure?time="+str(int(time.time()*1000)+5)+"&checkpoint="+str(randint(0,10))+"&value="+str(randint(-100,100))+"&name=dummy")
     res = conn.getresponse()
     print "putTreasure: ", self.id, " ---- ", res.status, res.reason
 
-    conn.request("GET","/putConsumption?value="+str(randint(-100,100))+"&time="+str(time.time()*1000)+"&statie=x")
+    conn.request("GET","/putConsumption?value="+str(randint(-100,100))+"&time="+str(int(time.time()*1000)+5)+"&statie=x")
     res = conn.getresponse()
     print "putConsumption: ", self.id, " ---- ", res.status, res.reason
     print "..............................................................."
 
 if __name__ == '__main__':
   print len(sys.argv)
-  ROOT = sys.argv[1]
+  l = len(sys.argv)
+  if l == 2:
+    ROOT = sys.argv[1]
+  else:
+    ROOT = sys.argv[1] + ":" + sys.argv[2]
 
 #  ROOT = socket.gethostbyname(HOST_NAME)
 #  ROOT = ROOT

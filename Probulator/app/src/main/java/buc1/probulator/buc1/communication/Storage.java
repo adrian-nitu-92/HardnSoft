@@ -1,6 +1,10 @@
 package buc1.probulator.buc1.communication;
 
+import org.achartengine.chart.TimeChart;
+import org.achartengine.model.TimeSeries;
+
 import java.io.Serializable;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,22 +27,27 @@ public class Storage extends Observable implements Serializable {
     private ArrayList<Double> heartRate;
     private ArrayList<Double> heartRateTimestamps;
     private int lastChunkIndex;
+    private TimeSeries heartRateSeries;
 
     private ArrayList<Double> humidity;
     private ArrayList<Double> humidityTimestamps;
     private int humidityLastChunkIndex;
+    private TimeSeries humiditySeries;
 
     private ArrayList<Double> airTemperature;
     private ArrayList<Double> airTemperatureTimestamps;
     private int airTemperatureLastChunkIndex;
+    private TimeSeries airTemperatureSeries;
 
     private ArrayList<Double> bodyTemperature;
     private ArrayList<Double> bodyTemperatureTimestamps;
     private int bodyTemperatureLastChunkIndex;
+    private TimeSeries bodyTemperatureSeries;
 
     private ArrayList<Double> consumption;
     private ArrayList<Double> consumptionTimestamps;
     private int consumptionLastChunkIndex;
+    private TimeSeries consumptionSeries;
 
     private ArrayList<TreasureInfo> treasures;
 
@@ -76,6 +85,12 @@ public class Storage extends Observable implements Serializable {
         consumptionLastChunkIndex = 0;
 
         treasures = new ArrayList<>();
+
+        heartRateSeries = new TimeSeries("Heartrate");
+        humiditySeries = new TimeSeries("Humidity");
+        airTemperatureSeries = new TimeSeries("Air temperature");
+        bodyTemperatureSeries = new TimeSeries("Body temperature");
+        consumptionSeries = new TimeSeries("Energy consumption");
     }
 
     public static Storage getInstance(){
@@ -181,23 +196,45 @@ public class Storage extends Observable implements Serializable {
     }
 
     public ArrayList<Double> getConsumption() {
-        return bodyTemperature;
+        return consumption;
     }
 
     public ArrayList<Double> getConsumptionTimestamps() {
-        return bodyTemperatureTimestamps;
+        return consumptionTimestamps;
     }
 
     public int getConsumptionLastChunkIndex() {
-        return bodyTemperatureLastChunkIndex;
+        return consumptionLastChunkIndex;
     }
 
     public void incConsumptionLastChunkIndex() {
-        bodyTemperatureLastChunkIndex++;
+        consumptionLastChunkIndex++;
     }
 
     public ArrayList<TreasureInfo> getTreasures() {
         return treasures;
+    }
+
+
+    /* Series */
+    public TimeSeries getHeartRateSeries() {
+        return heartRateSeries;
+    }
+
+    public TimeSeries getHumiditySeries() {
+        return  humiditySeries;
+    }
+
+    public TimeSeries getAirTemperatureSeries() {
+        return airTemperatureSeries;
+    }
+
+    public TimeSeries getBodyTemperatureSeries() {
+        return bodyTemperatureSeries;
+    }
+
+    public TimeSeries getConsumptionSeries() {
+        return consumptionSeries;
     }
 
     @Override
@@ -220,10 +257,10 @@ public class Storage extends Observable implements Serializable {
     public class TreasureInfo {
         private String name;
         private int checkpoint;
-        private double value;
+        private String value;
         private double timestamp;
 
-        public TreasureInfo(String name, int checkpoint, double value, double timestamp) {
+        public TreasureInfo(String name, int checkpoint, String value, double timestamp) {
             this.name = name;
             this.checkpoint = checkpoint;
             this.value = value;
@@ -238,7 +275,7 @@ public class Storage extends Observable implements Serializable {
             return checkpoint;
         }
 
-        public double getValue() {
+        public String getValue() {
             return value;
         }
 
@@ -259,74 +296,38 @@ public class Storage extends Observable implements Serializable {
             return c;
         }
 
-        public void parse(String string) {
-            if (string == null || "".equals(string)) {
-                return;
-            }
-
-            StringTokenizer argsTokenizer = new StringTokenizer(string, ";");
-
-            while (argsTokenizer.hasMoreTokens()) {
-                String arg = argsTokenizer.nextToken();
-
-                if (arg== null || "".equals(arg)) {
+        public synchronized void parse(String string) {
+            try {
+                if (string == null || "".equals(string)) {
                     return;
                 }
 
-                StringTokenizer argTokenizer = new StringTokenizer(arg, "=");
-                String key = argTokenizer.nextToken();
+                StringTokenizer argsTokenizer = new StringTokenizer(string, ";");
 
-                if (!argTokenizer.hasMoreTokens()) {
-                    continue;
-                }
+                while (argsTokenizer.hasMoreTokens()) {
+                    String arg = argsTokenizer.nextToken();
 
-                String value = argTokenizer.nextToken();
+                    if (arg == null || "".equals(arg)) {
+                        return;
+                    }
 
-                if (value == null || "".equals(value)) {
-                    continue;
-                }
+                    StringTokenizer argTokenizer = new StringTokenizer(arg, "=");
+                    String key = argTokenizer.nextToken();
 
-                StringTokenizer valueTokenizer = new StringTokenizer(value, "|");
-                ArrayList<DataUnit> values = new ArrayList<>();
-
-                if (key.equals("numsteps")) {
-                    String unit = valueTokenizer.nextToken();
-
-                    if (unit == null || "".equals(unit)) {
+                    if (!argTokenizer.hasMoreTokens()) {
                         continue;
                     }
 
-                    StringTokenizer unitTokenizer = new StringTokenizer(unit);
+                    String value = argTokenizer.nextToken();
 
-                    Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
-                    String data = unitTokenizer.nextToken();
-
-                    numSteps = (int) Double.parseDouble(data);
-                    numStepsTimestamp = timestamp;
-
-                    continue;
-                }
-
-                if (key.equals("distance")) {
-                    String unit = valueTokenizer.nextToken();
-
-                    if (unit == null || "".equals(unit)) {
+                    if (value == null || "".equals(value)) {
                         continue;
                     }
 
-                    StringTokenizer unitTokenizer = new StringTokenizer(unit);
+                    StringTokenizer valueTokenizer = new StringTokenizer(value, "|");
+                    ArrayList<DataUnit> values = new ArrayList<>();
 
-                    Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
-                    String data = unitTokenizer.nextToken();
-
-                    distance = (int) Double.parseDouble(data);
-                    distanceTimestamp = timestamp;
-
-                    continue;
-                }
-
-                if (key.equals("heartrate")) {
-                    while (valueTokenizer.hasMoreTokens()) {
+                    if (key.equals("numsteps")) {
                         String unit = valueTokenizer.nextToken();
 
                         if (unit == null || "".equals(unit)) {
@@ -338,15 +339,13 @@ public class Storage extends Observable implements Serializable {
                         Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
                         String data = unitTokenizer.nextToken();
 
-                        heartRate.add(Double.parseDouble(data));
-                        heartRateTimestamps.add(timestamp);
+                        numSteps = (int) Double.parseDouble(data);
+                        numStepsTimestamp = timestamp;
 
                         continue;
                     }
-                }
 
-                if (key.equals("humidity")) {
-                    while (valueTokenizer.hasMoreTokens()) {
+                    if (key.equals("distance")) {
                         String unit = valueTokenizer.nextToken();
 
                         if (unit == null || "".equals(unit)) {
@@ -358,73 +357,145 @@ public class Storage extends Observable implements Serializable {
                         Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
                         String data = unitTokenizer.nextToken();
 
-                        humidity.add(Double.parseDouble(data));
-                        humidityTimestamps.add(timestamp);
+                        distance = (int) Double.parseDouble(data);
+                        distanceTimestamp = timestamp;
 
                         continue;
                     }
-                }
 
-                if (key.equals("airtemperature")) {
-                    while (valueTokenizer.hasMoreTokens()) {
-                        String unit = valueTokenizer.nextToken();
+                    if (key.equals("heartrate")) {
+                        while (valueTokenizer.hasMoreTokens()) {
+                            String unit = valueTokenizer.nextToken();
 
-                        if (unit == null || "".equals(unit)) {
+                            if (unit == null || "".equals(unit)) {
+                                continue;
+                            }
+
+                            StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                            Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                            String data = unitTokenizer.nextToken();
+
+                            heartRate.add(Double.parseDouble(data));
+                            heartRateTimestamps.add(timestamp);
+
+                            heartRateSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+
                             continue;
                         }
-
-                        StringTokenizer unitTokenizer = new StringTokenizer(unit);
-
-                        Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
-                        String data = unitTokenizer.nextToken();
-
-                        airTemperature.add(Double.parseDouble(data));
-                        airTemperatureTimestamps.add(timestamp);
-
-                        continue;
                     }
-                }
 
-                if (key.equals("bodytemperature")) {
-                    while (valueTokenizer.hasMoreTokens()) {
-                        String unit = valueTokenizer.nextToken();
+                    if (key.equals("humidity")) {
+                        while (valueTokenizer.hasMoreTokens()) {
+                            String unit = valueTokenizer.nextToken();
 
-                        if (unit == null || "".equals(unit)) {
+                            if (unit == null || "".equals(unit)) {
+                                continue;
+                            }
+
+                            StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                            Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                            String data = unitTokenizer.nextToken();
+
+                            humidity.add(Double.parseDouble(data));
+                            humidityTimestamps.add(timestamp);
+
+                            humiditySeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+
                             continue;
                         }
-
-                        StringTokenizer unitTokenizer = new StringTokenizer(unit);
-
-                        Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
-                        String data = unitTokenizer.nextToken();
-
-                        bodyTemperature.add(Double.parseDouble(data));
-                        bodyTemperatureTimestamps.add(timestamp);
-
-                        continue;
                     }
-                }
 
-                if (key.equals("treasure")) {
-                    while (valueTokenizer.hasMoreTokens()) {
-                        String unit = valueTokenizer.nextToken();
+                    if (key.equals("airtemperature")) {
+                        while (valueTokenizer.hasMoreTokens()) {
+                            String unit = valueTokenizer.nextToken();
 
-                        if (unit == null || "".equals(unit)) {
+                            if (unit == null || "".equals(unit)) {
+                                continue;
+                            }
+
+                            StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                            Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                            String data = unitTokenizer.nextToken();
+
+                            airTemperature.add(Double.parseDouble(data));
+                            airTemperatureTimestamps.add(timestamp);
+
+                            airTemperatureSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+
                             continue;
                         }
+                    }
 
-                        StringTokenizer unitTokenizer = new StringTokenizer(unit);
+                    if (key.equals("bodytemperature")) {
+                        while (valueTokenizer.hasMoreTokens()) {
+                            String unit = valueTokenizer.nextToken();
 
-                        Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
-                        int checkpoint = (int) Double.parseDouble(unitTokenizer.nextToken());
-                        double dataValue = Double.parseDouble(unitTokenizer.nextToken());
-                        String name = unitTokenizer.nextToken();
+                            if (unit == null || "".equals(unit)) {
+                                continue;
+                            }
 
-                        treasures.add(new TreasureInfo(name, checkpoint, dataValue, timestamp));
+                            StringTokenizer unitTokenizer = new StringTokenizer(unit);
 
-                        continue;
+                            Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                            String data = unitTokenizer.nextToken();
+
+                            bodyTemperature.add(Double.parseDouble(data));
+                            bodyTemperatureTimestamps.add(timestamp);
+
+                            bodyTemperatureSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+
+                            continue;
+                        }
+                    }
+
+                    if (key.equals("consumption")) {
+                        while (valueTokenizer.hasMoreTokens()) {
+                            String unit = valueTokenizer.nextToken();
+
+                            if (unit == null || "".equals(unit)) {
+                                continue;
+                            }
+
+                            StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                            Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                            String data = unitTokenizer.nextToken();
+
+                            consumption.add(Double.parseDouble(data));
+                            consumptionTimestamps.add(timestamp);
+
+                            consumptionSeries.add(new Date(Math.round(timestamp)), Double.parseDouble(data));
+
+                            continue;
+                        }
+                    }
+
+                    if (key.equals("treasure")) {
+                        while (valueTokenizer.hasMoreTokens()) {
+                            String unit = valueTokenizer.nextToken();
+
+                            if (unit == null || "".equals(unit)) {
+                                continue;
+                            }
+
+                            StringTokenizer unitTokenizer = new StringTokenizer(unit);
+
+                            Double timestamp = Double.parseDouble(unitTokenizer.nextToken());
+                            int checkpoint = (int) Double.parseDouble(unitTokenizer.nextToken());
+                            String dataValue = unitTokenizer.nextToken();
+                            String name = unitTokenizer.nextToken();
+
+                            treasures.add(new TreasureInfo(name, checkpoint, dataValue, timestamp));
+
+                            continue;
+                        }
                     }
                 }
+            } catch(Exception e) {
+
             }
         }
     }

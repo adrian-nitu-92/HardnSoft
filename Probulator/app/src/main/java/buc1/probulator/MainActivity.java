@@ -10,6 +10,7 @@ import android.view.Menu;
 
 import buc1.probulator.buc1.communication.Storage;
 import buc1.probulator.buc1.communication.Updater;
+import buc1.probulator.settings.SettingsFragment;
 
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -97,6 +98,9 @@ public class MainActivity extends ActionBarActivity
                 break;
             case 6:
                 transaction.replace(R.id.container, TreasureFragment.newInstance());
+                break;
+            case 7:
+                transaction.replace(R.id.container, new SettingsFragment());
                 break;
         }
         transaction.commit();

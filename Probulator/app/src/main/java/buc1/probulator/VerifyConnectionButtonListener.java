@@ -40,31 +40,35 @@ public class VerifyConnectionButtonListener implements View.OnClickListener {
     }
 
 	private void getConnectionInfo() {
-		String protocol = ((TextView) activity.findViewById(R.id.protocol_input))
-				.getText().toString().trim();
-		if (!checkmptyFieldErrorMessage(protocol, "Protocol cannot be an empty string")) {
-			return;
-		}
-		
-		String ip = ((TextView) activity.findViewById(R.id.ip_input))
-				.getText().toString().trim();
-		if (!checkmptyFieldErrorMessage(ip, "Ip cannot be an empty string")) {
-			return;
-		}
-		
-		String port = ((TextView) activity.findViewById(R.id.port_input))
-				.getText().toString().trim();
-		if (!checkmptyFieldErrorMessage(port, "Ip cannot be an empty string")) {
-			return;
-		}
-		
-		communicationInfo = CommunicationInfo.getCommunicationInfo(protocol, ip, port);
-		
-		Intent intent = new Intent(activity, MainActivity.class);
-		intent.putExtra("PROTOCOL", protocol);
-		intent.putExtra("IP", ip);
-		intent.putExtra("PORT", port);
-		activity.startActivity(intent);
+        try {
+            String protocol = ((TextView) activity.findViewById(R.id.protocol_input))
+                    .getText().toString().trim();
+            if (!checkmptyFieldErrorMessage(protocol, "Protocol cannot be an empty string")) {
+                return;
+            }
+
+            String ip = ((TextView) activity.findViewById(R.id.ip_input))
+                    .getText().toString().trim();
+            if (!checkmptyFieldErrorMessage(ip, "Ip cannot be an empty string")) {
+                return;
+            }
+
+            String port = ((TextView) activity.findViewById(R.id.port_input))
+                    .getText().toString().trim();
+            if (!checkmptyFieldErrorMessage(port, "Ip cannot be an empty string")) {
+                return;
+            }
+
+            communicationInfo = CommunicationInfo.getCommunicationInfo(protocol, ip, port);
+
+            Intent intent = new Intent(activity, MainActivity.class);
+            intent.putExtra("PROTOCOL", protocol);
+            intent.putExtra("IP", ip);
+            intent.putExtra("PORT", port);
+            activity.startActivity(intent);
+        } catch (Exception e) {
+
+        }
 	}
 	
 	private boolean checkmptyFieldErrorMessage(String field, String errorMessage) {

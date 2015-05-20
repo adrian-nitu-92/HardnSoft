@@ -34,9 +34,7 @@ public class HumidityFragment extends Fragment implements Observer {
 
     private GraphicalView mChart;
 
-    private XYSeries visitsSeries ;
     private XYMultipleSeriesDataset dataset;
-
     private XYSeriesRenderer visitsRenderer;
     private XYMultipleSeriesRenderer multiRenderer;
 
@@ -51,20 +49,16 @@ public class HumidityFragment extends Fragment implements Observer {
     }
 
     public HumidityFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_humidity, container, false);
     }
 
@@ -86,32 +80,12 @@ public class HumidityFragment extends Fragment implements Observer {
     @Override
     public void onStart() {
         super.onStart();
-        //setupChart();
-        addAllValues();
+        mChart.repaint();
     }
 
-    private void appendDataToGraph() {
-        final Storage storage = Storage.getInstance();
-        final ArrayList<Double> y = storage.getHumidity();
-        final ArrayList<Double> x = storage.getHumidityTimestamps();
-        final int lci = storage.getHumidityLastChunkIndex();
-
-
-        Thread t = new Thread() {
-            public void run() {
-                for (int i = lci; i < x.size(); i++) {
-                    storage.incHumidityLastChunkIndex();
-                    visitsSeries.add(x.get(i), y.get(i));
-                }
-            }
-        };
-        t.start();
-
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void onResume() {
+        super.onResume();
         mChart.repaint();
     }
 
@@ -121,21 +95,18 @@ public class HumidityFragment extends Fragment implements Observer {
             try {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        appendDataToGraph();
+                        mChart.repaint();
 
                     }
                 });
             } catch (Exception e) {
-
             }
         }
     }
 
     private void setupChart(){
-        visitsSeries = new XYSeries("Humidity");
-
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(visitsSeries);
+        dataset.addSeries(Storage.getInstance().getHumiditySeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.BLUE);
@@ -175,32 +146,7 @@ public class HumidityFragment extends Fragment implements Observer {
         multiRenderer.addSeriesRenderer(visitsRenderer);
 
         LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.humidity_chart_container);
-        mChart = (GraphicalView) ChartFactory.getLineChartView(getActivity().getBaseContext(), dataset, multiRenderer);
+        mChart = (GraphicalView) ChartFactory.getTimeChartView(getActivity().getBaseContext(), dataset, multiRenderer, "hh:mm:ss");
         chartContainer.addView(mChart);
-    }
-
-    public void addAllValues() {
-        final Storage storage = Storage.getInstance();
-        final ArrayList<Double> y = storage.getHumidity();
-        final ArrayList<Double> x = storage.getHumidityTimestamps();
-        final int lci = storage.getHumidityLastChunkIndex();
-        final int start = lci < 40? 0 : lci - 40;
-
-        Thread t = new Thread() {
-            public void run() {
-                for (int i = 0; i < lci; i++) {
-                    visitsSeries.add(x.get(i), y.get(i));
-                }
-            }
-        };
-        t.start();
-
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        mChart.repaint();
-
     }
 }

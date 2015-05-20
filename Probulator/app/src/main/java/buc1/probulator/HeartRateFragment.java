@@ -12,14 +12,12 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
-import org.achartengine.model.TimeSeries;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
@@ -51,20 +49,16 @@ public class HeartRateFragment extends Fragment implements Observer {
     }
 
     public HeartRateFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_heart_rate, container, false);
     }
 
@@ -86,7 +80,15 @@ public class HeartRateFragment extends Fragment implements Observer {
     @Override
     public void onStart() {
         super.onStart();
-        addAllValues();
+        //setupChart();
+        //addAllValues();
+        mChart.repaint();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mChart.repaint();
     }
 
     private void appendDataToGraph() {
@@ -116,24 +118,20 @@ public class HeartRateFragment extends Fragment implements Observer {
 
     @Override
     public void update(Observable observable, Object data) {
-        if (fragment != null && fragment.isVisible()) {
             try {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        appendDataToGraph();
+                        //appendDataToGraph();
+                        mChart.repaint();
                     }
                 });
             } catch (Exception e) {
-
-            }
         }
     }
 
     private void setupChart(){
-        visitsSeries = new XYSeries("Heartrate");
-
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(visitsSeries);
+        dataset.addSeries(Storage.getInstance().getHeartRateSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.RED);
@@ -173,7 +171,7 @@ public class HeartRateFragment extends Fragment implements Observer {
         multiRenderer.addSeriesRenderer(visitsRenderer);
 
         LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.chart_container);
-        mChart = (GraphicalView) ChartFactory.getLineChartView(getActivity().getBaseContext(), dataset, multiRenderer);
+        mChart = (GraphicalView) ChartFactory.getTimeChartView(getActivity().getBaseContext(), dataset, multiRenderer, "hh:mm:ss");
         chartContainer.addView(mChart);
     }
 

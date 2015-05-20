@@ -24,6 +24,7 @@ import android.widget.SimpleAdapter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
  * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
@@ -143,8 +144,13 @@ public class NavigationDrawerFragment extends Fragment {
         hm.put(TEXT, "Treasures");
         mList.add(hm);
 
-        String[] from = { TEXT };
-        int[] to = {R.id.text};
+        hm = new HashMap<>();
+        hm.put(ICON, Integer.toString(R.drawable.ic_action_settings));
+        hm.put(TEXT, "Settings");
+        mList.add(hm);
+
+        String[] from = { ICON, TEXT };
+        int[] to = {R.id.icon, R.id.text};
 
         SimpleAdapter mAdapter = new SimpleAdapter(getActionBar().getThemedContext(), mList, R.layout.navigation_drawer_item, from, to);
 

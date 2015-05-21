@@ -49,20 +49,16 @@ public class HeartRateFragment extends Fragment implements Observer {
     }
 
     public HeartRateFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_heart_rate, container, false);
     }
 
@@ -85,15 +81,29 @@ public class HeartRateFragment extends Fragment implements Observer {
     public void onStart() {
         super.onStart();
         //setupChart();
-        addAllValues();
+        //addAllValues();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void appendDataToGraph() {
-        final Storage storage = Storage.getInstance();
+        final Storage storage = Storage.getInstance(getActivity());
         final ArrayList<Double> y = storage.getHeartRate();
         final ArrayList<Double> x = storage.getHeartRateTimestamps();
         final int lci = storage.getLastChunkIndex();
-
 
         Thread t = new Thread() {
             public void run() {
@@ -111,29 +121,33 @@ public class HeartRateFragment extends Fragment implements Observer {
             e.printStackTrace();
         }
 
-        mChart.repaint();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void update(Observable observable, Object data) {
-        if (fragment != null && fragment.isVisible()) {
             try {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        appendDataToGraph();
+                        //appendDataToGraph();
+                        try {
+                            mChart.repaint();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             } catch (Exception e) {
-
-            }
         }
     }
 
     private void setupChart(){
-        visitsSeries = new XYSeries("Heartrate");
-
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(visitsSeries);
+        dataset.addSeries(Storage.getInstance(getActivity()).getHeartRateSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.RED);
@@ -171,14 +185,15 @@ public class HeartRateFragment extends Fragment implements Observer {
         multiRenderer.setInScroll(true);
 
         multiRenderer.addSeriesRenderer(visitsRenderer);
+        multiRenderer.setDisplayChartValues(false);
 
         LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.chart_container);
-        mChart = (GraphicalView) ChartFactory.getLineChartView(getActivity().getBaseContext(), dataset, multiRenderer);
+        mChart = (GraphicalView) ChartFactory.getTimeChartView(getActivity().getBaseContext(), dataset, multiRenderer, "hh:mm:ss");
         chartContainer.addView(mChart);
     }
 
     public void addAllValues() {
-        final Storage storage = Storage.getInstance();
+        final Storage storage = Storage.getInstance(getActivity());
         final ArrayList<Double> y = storage.getHeartRate();
         final ArrayList<Double> x = storage.getHeartRateTimestamps();
         final int lci = storage.getLastChunkIndex();
@@ -198,7 +213,11 @@ public class HeartRateFragment extends Fragment implements Observer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        mChart.repaint();
 
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

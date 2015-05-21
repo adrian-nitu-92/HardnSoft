@@ -1,0 +1,87 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="buc1.probulator.Settings.SettingsFragment">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="left|top"
+        android:id="@+id/settings_layout">
+
+        <RelativeLayout
+            android:id="@+id/weight_field"
+            style="@style/FieldRelativeLayout">
+
+            <TextView
+                android:text="@string/weight"
+                android:id="@+id/weight_label"
+                style="@style/TitleTextView" />
+
+            <TextView
+                android:text="60 kg"
+                android:id="@+id/weight_value"
+                android:layout_alignTop="@+id/weight_label"
+                style="@style/ValueTextView"/>
+        </RelativeLayout>
+
+        <View style="@style/SeparatorLine"/>
+
+        <RelativeLayout
+            android:id="@+id/height_field"
+            style="@style/FieldRelativeLayout">
+
+            <TextView
+                android:text="@string/height"
+                android:id="@+id/height_label"
+                style="@style/TitleTextView"/>
+
+            <TextView
+                android:text="170 cm"
+                android:id="@+id/height_value"
+                android:layout_alignTop="@+id/height_label"
+                style="@style/ValueTextView"/>
+        </RelativeLayout>
+
+        <View style="@style/SeparatorLine"/>
+
+        <RelativeLayout
+            android:id="@+id/age_field"
+            style="@style/FieldRelativeLayout">
+
+            <TextView
+                android:text="@string/age"
+                android:id="@+id/age_label"
+                style="@style/TitleTextView"/>
+
+            <TextView
+                android:text="20 years"
+                android:id="@+id/age_value"
+                android:layout_alignTop="@+id/age_label"
+                style="@style/ValueTextView" />
+        </RelativeLayout>
+
+        <View style="@style/SeparatorLine"/>
+
+        <RelativeLayout
+            android:id="@+id/sex_field"
+            style="@style/FieldRelativeLayout">
+
+            <TextView
+                android:text="@string/sex"
+                android:id="@+id/sex_label"
+                style="@style/TitleTextView" />
+
+            <TextView
+                android:text="M"
+                android:id="@+id/sex_value"
+                android:layout_alignTop="@+id/sex_label"
+                style="@style/ValueTextView" />
+        </RelativeLayout>
+
+        <View style="@style/SeparatorLine"/>
+
+    </LinearLayout>
+</ScrollView>

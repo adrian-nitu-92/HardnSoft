@@ -24,6 +24,7 @@ import android.widget.SimpleAdapter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
  * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
@@ -116,27 +117,47 @@ public class NavigationDrawerFragment extends Fragment {
         HashMap<String, String> hm;
 
         hm = new HashMap<String,String>();
-        hm.put(TEXT, "Number of steps");
+        hm.put(ICON, Integer.toString(R.drawable.nicewalk));
+        hm.put(TEXT, "Walk");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.heartrate));
         hm.put(TEXT, "Heartrate");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.humidity));
         hm.put(TEXT, "Humidity");
         mList.add(hm);
 
         hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.envtemp));
         hm.put(TEXT, "Air temperature");
         mList.add(hm);
 
+        hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.temp));
+        hm.put(TEXT, "Body temperature");
+        mList.add(hm);
+
+        hm = new HashMap<String,String>();
+        hm.put(ICON, Integer.toString(R.drawable.consumption));
+        hm.put(TEXT, "Consumption");
+        mList.add(hm);
+
         hm = new HashMap<String, String>();
+        hm.put(ICON, Integer.toString(R.drawable.treasure));
         hm.put(TEXT, "Treasures");
         mList.add(hm);
 
-        String[] from = { TEXT };
-        int[] to = {R.id.text};
+        hm = new HashMap<>();
+        hm.put(ICON, Integer.toString(R.drawable.ic_action_settings));
+        hm.put(TEXT, "Settings");
+        mList.add(hm);
+
+        String[] from = { ICON, TEXT };
+        int[] to = {R.id.icon, R.id.text};
 
         SimpleAdapter mAdapter = new SimpleAdapter(getActionBar().getThemedContext(), mList, R.layout.navigation_drawer_item, from, to);
 

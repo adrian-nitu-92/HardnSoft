@@ -25,13 +25,6 @@ trace1 = Scatter(
     stream=stream         # (!) embed stream id, 1 per trace
 )
 
-trace2 = Scatter(
-    x=[],
-    y=[],
-    mode='lines+markers',
-    stream=stream         # (!) embed stream id, 1 per trace
-)
-
 data = Data([trace1])
 
 # Add title to layout object

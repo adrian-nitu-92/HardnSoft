@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -19,7 +18,6 @@ import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
 import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
@@ -32,7 +30,6 @@ public class AirTemperatureFragment extends Fragment implements Observer {
 
     private GraphicalView mChart;
 
-    private XYSeries visitsSeries ;
     private XYMultipleSeriesDataset dataset;
 
     private XYSeriesRenderer visitsRenderer;
@@ -49,20 +46,16 @@ public class AirTemperatureFragment extends Fragment implements Observer {
     }
 
     public AirTemperatureFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_air_temperature, container, false);
     }
 
@@ -84,33 +77,21 @@ public class AirTemperatureFragment extends Fragment implements Observer {
     @Override
     public void onStart() {
         super.onStart();
-        //setupChart();
-        addAllValues();
-    }
-
-    private void appendDataToGraph() {
-        final Storage storage = Storage.getInstance();
-        final ArrayList<Double> y = storage.getAirTemperature();
-        final ArrayList<Double> x = storage.getAirTemperatureTimestamps();
-        final int lci = storage.getAirTemperatureLastChunkIndex();
-
-
-        Thread t = new Thread() {
-            public void run() {
-                for (int i = lci; i < x.size(); i++) {
-                    storage.incAirTemperatureLastChunkIndex();
-                    visitsSeries.add(x.get(i), y.get(i));
-                }
-            }
-        };
-        t.start();
-
         try {
-            t.join();
-        } catch (InterruptedException e) {
+            mChart.repaint();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        mChart.repaint();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        try {
+            mChart.repaint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -119,8 +100,11 @@ public class AirTemperatureFragment extends Fragment implements Observer {
             try {
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        appendDataToGraph();
-
+                        try {
+                            mChart.repaint();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -130,10 +114,8 @@ public class AirTemperatureFragment extends Fragment implements Observer {
     }
 
     private void setupChart(){
-        visitsSeries = new XYSeries("Air Temperature");
-
         dataset = new XYMultipleSeriesDataset();
-        dataset.addSeries(visitsSeries);
+        dataset.addSeries(Storage.getInstance(getActivity()).getAirTemperatureSeries());
 
         visitsRenderer = new XYSeriesRenderer();
         visitsRenderer.setColor(Color.DKGRAY);
@@ -171,34 +153,11 @@ public class AirTemperatureFragment extends Fragment implements Observer {
         multiRenderer.setInScroll(true);
 
         multiRenderer.addSeriesRenderer(visitsRenderer);
+        multiRenderer.setDisplayChartValues(false);
+        
 
         LinearLayout chartContainer = (LinearLayout) getActivity().findViewById(R.id.air_temperature_chart_container);
-        mChart = (GraphicalView) ChartFactory.getLineChartView(getActivity().getBaseContext(), dataset, multiRenderer);
+        mChart = (GraphicalView) ChartFactory.getTimeChartView(getActivity().getBaseContext(), dataset, multiRenderer, "hh:mm:ss");
         chartContainer.addView(mChart);
-    }
-
-    public void addAllValues() {
-        final Storage storage = Storage.getInstance();
-        final ArrayList<Double> y = storage.getAirTemperature();
-        final ArrayList<Double> x = storage.getAirTemperatureTimestamps();
-        final int lci = storage.getAirTemperatureLastChunkIndex();
-        final int start = lci < 40? 0 : lci - 40;
-
-        Thread t = new Thread() {
-            public void run() {
-                for (int i = 0; i < lci; i++) {
-                    visitsSeries.add(x.get(i), y.get(i));
-                }
-            }
-        };
-        t.start();
-
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        mChart.repaint();
-
     }
 }

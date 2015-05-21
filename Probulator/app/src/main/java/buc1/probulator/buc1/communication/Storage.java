@@ -258,19 +258,6 @@ public class Storage extends Observable implements Serializable {
     public void notifyObservers(Object arg) {
         for (Observer o : observers) {
             o.update(this, arg);
-            if (o instanceof TreasureFragment) {
-                //create the notification
-                notification_builder = new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("Treasure!")
-                        .setContentText("Hey Terrance, we've found treasah`!")
-                        .setDefaults(Notification.DEFAULT_ALL)
-                        .setAutoCancel(true);
-
-                notification_manager = NotificationManagerCompat.from(context);
-
-                notification_manager.notify(notification_id, notification_builder.build());
-            }
         }
     }
 
@@ -525,12 +512,21 @@ public class Storage extends Observable implements Serializable {
 
                             treasures.add(new TreasureInfo(name, checkpoint, dataValue, timestamp));
 
+                            notification_builder = new NotificationCompat.Builder(context)
+                                    .setSmallIcon(R.drawable.ic_launcher)
+                                    .setContentTitle("Treasure!")
+                                    .setContentText("Found " + name + " at checkpoint " + checkpoint + "!")
+                                    .setDefaults(Notification.DEFAULT_ALL)
+                                    .setAutoCancel(true);
+
+                            notification_manager = NotificationManagerCompat.from(context);
+                            notification_manager.notify(notification_id, notification_builder.build());
+
                             continue;
                         }
                     }
                 }
             } catch(Exception e) {
-
             }
         }
     }

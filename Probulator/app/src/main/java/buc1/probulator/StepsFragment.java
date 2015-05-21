@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -64,6 +66,18 @@ public class StepsFragment extends Fragment implements Observer {
         progressBar.setMax(1000);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        addStepsNumber();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        addStepsNumber();
+    }
+
     private void addStepsNumber() {
         Storage store = Storage.getInstance(getActivity());
         int numSteps = store.getNumSteps();
@@ -83,8 +97,9 @@ public class StepsFragment extends Fragment implements Observer {
 
         SettingsStorage settingsStorage = SettingsStorage.getInstance(stepsFragment.getActivity());
         double nrCals = 0;
+
         if (settingsStorage.getSex() == SettingsStorage.Sex.FEMALE) {
-            nrCals = 665.09 + (9.56 * settingsStorage.getWeightKg()) +
+            nrCals = 65.09 + (9.56 * settingsStorage.getWeightKg()) +
                     (1.84 * settingsStorage.getHeightCm()) -
                     (4.67 * settingsStorage.getAge());
         } else {
@@ -92,8 +107,11 @@ public class StepsFragment extends Fragment implements Observer {
                     (5 * settingsStorage.getHeightCm()) -
                     (6.75 * settingsStorage.getAge());
         }
-        nrCals *= 2;
-        ((TextView) view.findViewById(R.id.calories)).setText(nrCals + " calories burned");
+
+        nrCals = 0.4 * nrCals * distance / 1000;
+
+        NumberFormat formatter = new DecimalFormat("#0.00");
+        ((TextView) view.findViewById(R.id.calories)).setText(formatter.format(nrCals) + " calories burned");
     }
 
     @Override

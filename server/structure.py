@@ -19,6 +19,9 @@ class Treasure:
 #Each method is thread safe -> do not call them after lock.acquire()
 class Structure:
   def __init__(self):
+    self.stationsList = []
+    self.mutexStationList = Lock()
+
     self.timeStart = None
     self.mutexTimeStart = Lock()
 
@@ -46,6 +49,12 @@ class Structure:
 
     self.consumption = []
     self.mutexConsumption = Lock()
+
+  def updateStationList(self, station):
+    self.mutexStationList.acquire()
+    if not station in self.stationsList:
+      self.stationsList.append(station)
+    self.mutexStationList.release()
 
   def updateStart(self, parsed):
     self.mutexTimeStart.acquire()
@@ -190,7 +199,12 @@ class Structure:
     mutex.acquire()
     message = key + "="
     for rate in mylist:
-      message += str(rate[0]) + " " + str(rate[1]) + "|"
+      if rate is None:
+        continue
+      for elem in rate:
+        if not elem is None:
+          message += str(elem) + " "
+      message += "|"    
     # delimitator
     message += ";"
     mutex.release()
@@ -260,7 +274,13 @@ class Structure:
   def serializeList(self, mylist):
     message = ""
     for elem in mylist:
-      message += str(elem[0]) + " " + str(elem[1]) + ";\n"
+      if elem is None:
+        continue
+      for e in elem:
+        if e is None:
+          continue
+        message += str(e) + " "
+      message += ";\n"
     return message
 
   def logTreasure(self):
@@ -281,11 +301,13 @@ class Structure:
       self.mutexNumSteps)
     self._clearData("distance", 
       self.mutexDistance)
-    self._clearData("airtemperature",
+    self._clearData("airTemperature",
       self.mutexTemperature)
     self._clearData("humidity",
       self.mutexHumidity)
     self._clearData("treasure",
+      self.mutexTreasure)
+    self._clearData("consumption",
       self.mutexTreasure)
 
   def _clearData(self, key, mutex):

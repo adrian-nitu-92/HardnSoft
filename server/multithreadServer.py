@@ -148,17 +148,19 @@ class MyHandler(BaseHTTPRequestHandler):
     try:
       rez.append(long(urlparse.parse_qs(parsed.query)['time'][0]))
     except:
-      pass
+      rez.append(None)
     try:
       x = float(urlparse.parse_qs(parsed.query)['value'][0])
       print x
       rez.append(x)
     except:
-      pass
+      rez.append(None)
     try:
-      rez.append(urlparse.parse_qs(parsed.query)['statie'][0])
+      station = urlparse.parse_qs(parsed.query)['statie'][0]
+      rez.append(station)
+      structure.updateStationList(station)
     except:
-      pass
+      rez.append(None)
     return rez
 
   def do_HEAD(self):

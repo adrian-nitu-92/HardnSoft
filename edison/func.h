@@ -16,7 +16,13 @@
 #define SA 9
 #define SB 8
 #define SC 7
+#define BODYS 0
 
 #define X 8
 #define Y 9
 #define Z 10
+
+#define NOTHING  1
+#define GAUSS  2
+#define IR  3
+#define TEMPERATURE 4

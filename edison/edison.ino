@@ -59,9 +59,6 @@ const int bioDataSize = sizeof(bioDataName) / sizeof(char*);
 float bioData[bioDataSize];
 char * bioDataSI[bioDataSize] = {"C", "BPM", "", "m", "C", "%", "%" };
 
-int NOTHING = 1;
-int GAUSS = 2;
-int IR = 3;
 int treasures[2];
 int gauss ;
 char treasureBuffer[200];
@@ -275,6 +272,8 @@ int scanTweetTag()
   tpost.print("Reached waypoint:");
   waypointHelper.begin();
   for(k = 0; k < 16; k++){
+    if(mfrc522.publicBuffer[k] < 16 )
+        waypointHelper.print("0");
     waypointHelper.print(mfrc522.publicBuffer[k], HEX);
   }
   if(! strcmp(waypoint, lastWaypoint)){
@@ -353,7 +352,12 @@ void loop()
    if(STOP_FLAG)
     while(1);
       if(timeStamp[0] + timeout[0] <  millis()){
-         bioData[1] = readADC(HR);
+         int z = readADC(HR); //XXX
+         //check over a prag
+         //check local peak
+         //get last peak time location
+         unsigned long perioada = 750; //ms
+         bioData[0] = 60.0 * (1000.0/perioada);
          //do smth XXX
          timeStamp[0] = millis();
          Serial.println("HR");
@@ -363,7 +367,6 @@ void loop()
          int x = readADC(X);
          int y = readADC(Y);
          int z = readADC(Z);
-         //do smth? Steps? Distance? XXX
          static int THRESHOLD = 15;
          const int UPRIGHT = 950;
          const int INFATZA = 850;
@@ -373,7 +376,7 @@ void loop()
          // asteapta pana la resetare pe UPRIGHT
          if( ms + 600 < millis() && 
          (value - THRESHOLD > UPRIGHT || value + THRESHOLD < UPRIGHT)){
-           //if(!(value - THRESHOLD > INFATZA || value + THRESHOLD < INFATZA))
+           //if(!(value - THRESHOLD > INFATZA || value + THRESHOLD < INFATZA)) cacatul asta NU merge :(
            {
                 ms = millis();
                 if(STARTED_FLAG){
@@ -490,51 +493,95 @@ void loop()
          treasures[0] = NOTHING;
          treasures[1] = NOTHING;
          continue;
-         
       }
-    
   }
 }
 
 void TreasureData()
 {
-   int toServer = 0; 
    noTone(3);
-   tone(3, 660);
-   float celsius = 0;
-   celsius = mlx.getTemp();
-   //PRINTOUT?
-   noTone(3);
-   int static lastGauss = readADC(HALL);
    tone(3, 440);
-   TreasureHelper.begin();
-   TreasureHelper.print("GET /putTreasure?");
-   TreasureHelper.print("time=");
-   TreasureHelper.print(epoch);
-   TreasureHelper.print("&checkpoint=");
-   TreasureHelper.print(lastVisited);
-   gauss = readADC(HALL);
-   Serial.print("Gaussiana");
-   Serial.print(gauss);
-   Serial.print(" ");
-   Serial.println(lastGauss);
-   if(gauss - 50 > lastGauss || gauss +50 < lastGauss){
+   float celsius = 0;
+   //XXXcelsius = mlx.getTemp();
+   if(celsius > 35 || celsius < 18 )
+   {
+     TreasureHelper.begin();
+     TreasureHelper.print("GET /putTreasure?");
+     TreasureHelper.print("time=");
+     TreasureHelper.print(epoch);
+     TreasureHelper.print("&checkpoint=");
+     TreasureHelper.print(lastVisited);
      TreasureHelper.print("&value=");
-     TreasureHelper.print(gauss);
-     TreasureHelper.print("G&name=");
-     TreasureHelper.print("GAUSS");
-     toServer = 1;
+     TreasureHelper.print(celsius);
+     TreasureHelper.print("*C&name=");
+     TreasureHelper.print("TEMPERATURE");
      if(treasures[0] == NOTHING) {
-       treasures[0] = GAUSS;
-     } else if(treasures[1] == NOTHING && treasures[0] != GAUSS) {
-       treasures[1] = GAUSS;
+       treasures[0] = TEMPERATURE;
+     } else if(treasures[1] == NOTHING && treasures[0] != TEMPERATURE) {
+       treasures[1] = TEMPERATURE;
      }
-  }
-  static long unsigned timesl = millis();
-  if(timesl + 1000 < millis()){
-    lastGauss = gauss;
-    timesl = millis();
-  }
+     singleDataToServer(&TreasureHelper, 9);
+   }
+   noTone(3);
+   {
+     //MIC // teoretic ca la heartrate, dar mama lui de heartrate
+     # if 0  
+      MIC bors;
+     #else
+       int static lastGauss = readADC(HALL);
+       tone(3, 660);
+       Serial.print("Gaussiana");
+       Serial.print(gauss);
+       Serial.print(" ");
+       Serial.println(lastGauss);
+       gauss = readADC(HALL);
+       if(gauss - 50 > lastGauss || gauss +50 < lastGauss){
+         TreasureHelper.begin();
+         TreasureHelper.print("GET /putTreasure?");
+         TreasureHelper.print("time=");
+         TreasureHelper.print(epoch);
+         TreasureHelper.print("&checkpoint=");
+         TreasureHelper.print(lastVisited);
+         TreasureHelper.print("&value=");
+         TreasureHelper.print(gauss);
+         TreasureHelper.print("G&name=");
+         TreasureHelper.print("GAUSS");
+         if(treasures[0] == NOTHING) {
+           treasures[0] = GAUSS;
+         } else if(treasures[1] == NOTHING && treasures[0] != GAUSS) {
+           treasures[1] = GAUSS;
+         }
+         singleDataToServer(&TreasureHelper, 9);
+      }
+      static long unsigned timesl = millis();
+      if(timesl + 1000 < millis()){
+        lastGauss = gauss;
+        timesl = millis();
+      }
+     #endif
+   }
+   {
+     int red = readADC(R);
+     int gre = readADC(G);
+     int blu = readADC(B);         
+     Serial.println("Leduri:");
+     Serial.println(red);
+     Serial.println(gre);
+     Serial.println(blu);
+   }
+   {
+     static unsigned long hzStart = 0;
+     unsigned long duration;
+     const int THRESHOLD = 5;
+     if(readADC(SONIC) > THRESHOLD && !hzStart){ //x idk about this one, sa
+       hzStart = millis();
+     } else {
+       duration = millis() - hzStart;
+       hzStart = 0;
+       //XXX send data ?
+     }
+   }
+   
   byte toggle=0;
   byte address=0;
   byte command=0;
@@ -542,13 +589,17 @@ void TreasureData()
   tone(3, 660);
   unsigned long initialTime = micros();
   while(1){
-    if(initialTime + 8*14000 < micros())
-    {
+    if(initialTime + 8*14000 < micros()) {
       break;
     }
     if (rc5->read(&toggle, &address, &command))
     {
-       Serial.println("in read");
+       TreasureHelper.begin();
+       TreasureHelper.print("GET /putTreasure?");
+       TreasureHelper.print("time=");
+       TreasureHelper.print(epoch);
+       TreasureHelper.print("&checkpoint=");
+       TreasureHelper.print(lastVisited);
        TreasureHelper.print("&value=0x");
        TreasureHelper.print(toggle, HEX);
        TreasureHelper.print("0x");
@@ -557,7 +608,7 @@ void TreasureData()
        TreasureHelper.print(command, HEX);
        TreasureHelper.print("&name=");
        TreasureHelper.print("IR");
-       toServer = toggle || address || command;
+       singleDataToServer(&TreasureHelper, 9);
        if(treasures[0] == NOTHING) {
          treasures[0] = IR;
        } else if(treasures[1] == NOTHING && treasures[0] != IR) {
@@ -565,9 +616,6 @@ void TreasureData()
        }
        break;
     }
-  }
-  if(toServer){
-    singleDataToServer(&TreasureHelper, 9);
   }
   noTone(3);
   Serial.print("Treasures are");
@@ -782,18 +830,7 @@ void setADCMux(int input)
   digitalWrite(SA, (((uint8_t)input) & 1) != 0 ? HIGH : LOW);
   digitalWrite(SB, (((uint8_t)input) & 2) != 0 ? HIGH : LOW);
   digitalWrite(SC, (((uint8_t)input) & 4) != 0 ? HIGH : LOW);
-  //digitalWrite(MYS, (((uint8_t)input) & 4) != 0 ? HIGH : LOW);
-     return; 
-  //if (input == HALL) {
-    digitalWrite(SA, HIGH);
-    digitalWrite(SB, LOW);
-    digitalWrite(SC, LOW);
-  /* else {
-    digitalWrite(SA, LOW);
-    digitalWrite(SB, LOW);
-    digitalWrite(SC, LOW);
-  }*/
-  
+  digitalWrite(BODYS, (((uint8_t)input) & 8) != 0 ? HIGH : LOW);
 }  
 void ShowReaderDetails() {
   // Get the MFRC522 software version

@@ -26,7 +26,7 @@ MFRC522::MFRC522(	byte chipSelectPin,		///< Arduino pin connected to MFRC522's S
 	// Set the resetPowerDownPin as digital output, do not reset or power down.
 	_resetPowerDownPin = resetPowerDownPin;
 	pinMode(_resetPowerDownPin, OUTPUT);
-	digitalWrite(_resetPowerDownPin, LOW);
+	//digitalWrite(_resetPowerDownPin, LOW);
 	
 	// Set SPI bus to work with MFRC522 chip.
 	setSPIConfig();
@@ -194,7 +194,7 @@ byte MFRC522::PCD_CalculateCRC(	byte *data,		///< In: Pointer to the data to tra
  * Initializes the MFRC522 chip.
  */
 void MFRC522::PCD_Init() {
-	if (digitalRead(_resetPowerDownPin) == LOW) {	//The MFRC522 chip is in power down mode.
+	if (0 & digitalRead(_resetPowerDownPin) == LOW) {	//The MFRC522 chip is in power down mode.
 		digitalWrite(_resetPowerDownPin, HIGH);		// Exit power down mode. This triggers a hard reset.
 		// Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74�s. Let us be generous: 50ms.
 		delay(50);
@@ -1222,20 +1222,20 @@ void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned fro
 	MIFARE_Key key;
 	
 	// UID
-	Serial.print(F("Card UID:"));
+	//Serial.print(F("Card UID:"));
 	for (byte i = 0; i < uid->size; i++) {
 		if(uid->uidByte[i] < 0x10)
-			Serial.print(F(" 0"));
+			;//Serial.print(F(" 0"));
 		else
-			Serial.print(F(" "));
-		Serial.print(uid->uidByte[i], HEX);
+			;//Serial.print(F(" "));
+		;//Serial.print(uid->uidByte[i], HEX);
 	} 
-	Serial.println();
+	;//Serial.println();
 	
 	// PICC type
 	byte piccType = PICC_GetType(uid->sak);
-	Serial.print(F("PICC type: "));
-	Serial.println(PICC_GetTypeName(piccType));
+	;//Serial.print(F("PICC type: "));
+;//	Serial.println(PICC_GetTypeName(piccType));
 	
 	// Dump contents
 	switch (piccType) {
@@ -1266,7 +1266,7 @@ void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned fro
 			break; // No memory dump here
 	}
 	
-	Serial.println();
+	;//Serial.println();
 	PICC_HaltA(); // Already done if it was a MIFARE Classic PICC.
 } // End PICC_DumpToSerial()
 
@@ -1301,7 +1301,7 @@ void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,		///< Pointer to Uid str
 	
 	// Dump sectors, highest address first.
 	if (no_of_sectors) {
-		Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
+		;//Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
 		for (char i = no_of_sectors - 1; i >= 0; i--) {
 			PICC_DumpMifareClassicSectorToSerial(uid, key, i);
 		}
@@ -1362,32 +1362,32 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		// Sector number - only on first line
 		if (isSectorTrailer) {
 			if(sector < 10)
-				Serial.print(F("   ")); // Pad with spaces
+				;//Serial.print(F("   ")); // Pad with spaces
 			else
-				Serial.print(F("  ")); // Pad with spaces
-			Serial.print(sector);
-			Serial.print(F("   "));
+				;//Serial.print(F("  ")); // Pad with spaces
+			;//Serial.print(sector);
+			;//Serial.print(F("   "));
 		}
 		else {
-			Serial.print(F("       "));
+			;//Serial.print(F("       "));
 		}
 		// Block number
 		if(blockAddr < 10)
-			Serial.print(F("   ")); // Pad with spaces
+			;//Serial.print(F("   ")); // Pad with spaces
 		else {
 			if(blockAddr < 100)
-				Serial.print(F("  ")); // Pad with spaces
+				;//Serial.print(F("  ")); // Pad with spaces
 			else
-				Serial.print(F(" ")); // Pad with spaces
+				;//Serial.print(F(" ")); // Pad with spaces
 		}
-		Serial.print(blockAddr);
-		Serial.print(F("  "));
+		;//Serial.print(blockAddr);
+		;//Serial.print(F("  "));
 		// Establish encrypted communications before reading the first block
 		if (isSectorTrailer) {
 			status = PCD_Authenticate(PICC_CMD_MF_AUTH_KEY_A, firstBlock, key, uid);
 			if (status != STATUS_OK) {
-				Serial.print(F("PCD_Authenticate() failed: "));
-				Serial.println(GetStatusCodeName(status));
+				;//Serial.print(F("PCD_Authenticate() failed: "));
+				;//Serial.println(GetStatusCodeName(status));
 				return;
 			}
 		}
@@ -1395,8 +1395,8 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		byteCount = sizeof(buffer);
 		status = MIFARE_Read(blockAddr, buffer, &byteCount);
 		if (status != STATUS_OK) {
-			Serial.print(F("MIFARE_Read() failed: "));
-			Serial.println(GetStatusCodeName(status));
+			;//Serial.print(F("MIFARE_Read() failed: "));
+			;//Serial.println(GetStatusCodeName(status));
 			continue;
 		}
 		if (1 ||sector == 0) {
@@ -1405,12 +1405,12 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		// Dump data
 		for (byte index = 0; index < 16; index++) {
 			if(buffer[index] < 0x10)
-				Serial.print(F(" 0"));
+				;//Serial.print(F(" 0"));
 			else
-				Serial.print(F(" "));
-			Serial.print(buffer[index], HEX);
+				;//Serial.print(F(" "));
+			;//Serial.print(buffer[index], HEX);
 			if ((index % 4) == 3) {
-				Serial.print(F(" "));
+				;//Serial.print(F(" "));
 			}
 		}
 		// Parse sector trailer data
@@ -1441,22 +1441,22 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		
 		if (firstInGroup) {
 			// Print access bits
-			Serial.print(F(" [ "));
-			Serial.print((g[group] >> 2) & 1, DEC); Serial.print(F(" "));
-			Serial.print((g[group] >> 1) & 1, DEC); Serial.print(F(" "));
-			Serial.print((g[group] >> 0) & 1, DEC);
-			Serial.print(F(" ] "));
+			;//Serial.print(F(" [ "));
+			;//Serial.print((g[group] >> 2) & 1, DEC); Serial.print(F(" "));
+			;//Serial.print((g[group] >> 1) & 1, DEC); Serial.print(F(" "));
+			;//Serial.print((g[group] >> 0) & 1, DEC);
+			;//Serial.print(F(" ] "));
 			if (invertedError) {
-				Serial.print(F(" Inverted access bits did not match! "));
+				;//Serial.print(F(" Inverted access bits did not match! "));
 			}
 		}
 		
 		if (group != 3 && (g[group] == 1 || g[group] == 6)) { // Not a sector trailer, a value block
 			long value = (long(buffer[3])<<24) | (long(buffer[2])<<16) | (long(buffer[1])<<8) | long(buffer[0]);
-			Serial.print(F(" Value=0x")); Serial.print(value, HEX);
-			Serial.print(F(" Adr=0x")); Serial.print(buffer[12], HEX);
+			;//Serial.print(F(" Value=0x")); Serial.print(value, HEX);
+			;//Serial.print(F(" Adr=0x")); Serial.print(buffer[12], HEX);
 		}
-		Serial.println();
+		;//Serial.println();
 	}
 	
 	return;

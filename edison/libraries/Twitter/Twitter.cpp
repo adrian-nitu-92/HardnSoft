@@ -81,7 +81,8 @@ bool Twitter::checkStatus(Print *debug)
 			parseStatus++;
 		}
 	}
-	if(statusCode == 200){
+	if(statusCode > 99 ){
+		// I dont care what the data is..
 		client.flush();
 		client.stop();
 		return false;

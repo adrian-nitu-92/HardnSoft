@@ -364,13 +364,16 @@ void loop()
          continue;
       }
       if(timeStamp[1] + timeout[1] <  millis()){
+        while(2){
          int x = readADC(X);
          int y = readADC(Y);
          int z = readADC(Z);
          static int THRESHOLD = 15;
          const int UPRIGHT = 950;
          const int INFATZA = 850;
-         int value = sqrt(x*x + y*y + z * z);
+         //int value = sqrt(x*x + y*y + z * z);
+  
+         int value = z;
          static unsigned long ms = millis();
          // daca nu e pe langa UPRIGHT SI NICI pe langa INFATZA probabil e un step
          // asteapta pana la resetare pe UPRIGHT
@@ -389,6 +392,7 @@ void loop()
          Serial.println(value);
          Serial.println("ACC");
          timeStamp[1] = millis();
+        }
          continue;
       }
       if(timeStamp[2] + timeout[2] <  millis()){

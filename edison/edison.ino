@@ -1,4 +1,5 @@
-//#include <Wire.h>
+#define DEBUG 0
+
 #include <SPI.h>         
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -11,16 +12,20 @@
 #include <MFRC522.h>
 #include <SD.h>
 #include <Wire.h>
+#include "NanoSatisfi_MLX90614.h"
+NanoSatisfi_MLX90614 mlx;
+
 #include <Adafruit_HTU21DF.h>
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
-
+#include <RC5.h>
+RC5 *rc5;
 #include "func.h"
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance
 Twitter twitter("740118787-yM38RvSRo1VWLGqJKa32dbzctr9EYmKLrOAn72Fh"); //@AdrianNitu92
 //Twitter twitter("3289784783-Pu57mOkeKTUzmvRekphPctsK9vfLGYj1BtZQYeO"); //Bucharest1HnS
 // Initialize the client library
-WiFiClient client;
+WiFiClient client[10];
 File myFile;
 
 int port = 9000;  //HERE
@@ -54,6 +59,14 @@ const int bioDataSize = sizeof(bioDataName) / sizeof(char*);
 float bioData[bioDataSize];
 char * bioDataSI[bioDataSize] = {"C", "BPM", "", "m", "C", "%", "%" };
 
+int NOTHING = 1;
+int GAUSS = 2;
+int IR = 3;
+int treasures[2];
+int gauss ;
+char treasureBuffer[200];
+PString TreasureHelper(treasureBuffer, sizeof(treasureBuffer));
+
 void setup() 
 {
   #warning : set all pin directions
@@ -61,8 +74,8 @@ void setup()
  /* pinMode(SA, OUTPUT);
   pinMode(SB, OUTPUT);
   pinMode(SC, OUTPUT);
-  */
-  Serial.begin(115200);
+  */  Serial.begin(115200);
+  rc5 = new RC5(5);
   while (!Serial);
   SPI.begin();			// Init SPI bus
   mfrc522.PCD_Init();		// Init MFRC522
@@ -72,7 +85,8 @@ void setup()
   pinMode(SB, OUTPUT);
   pinMode(SC, OUTPUT);
   pinMode(2,OUTPUT);
-  pinMode(2, LOW);
+  digitalWrite(2, LOW);
+  pinMode(5, INPUT);
   if (!SD.begin(4)) {
     Serial.println("SD card initialization failed!");
     return;
@@ -86,13 +100,14 @@ void setup()
   lastmillis = millis();
   myFile = SD.open("/Bucharest1.csv",FILE_WRITE);
   if (htu.begin()) {
-    Serial.print("Temp: "); Serial.print(htu.readTemperature());
+    //Serial.print("Temp: "); Serial.print(htu.readTemperature());
     bioData[4] = htu.readTemperature();
-    Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
+    //Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
     bioData[5] = htu.readHumidity();
   } else {
      Serial.println("Couldn't find sensor!");
   }
+  toneFinishedSetup();
 }
 
 void WifiConnect()
@@ -126,8 +141,10 @@ void logString(char* dataString)
       Serial.println("No logging available");
       return;
     }
+    #if DEBUG
     Serial.println("Sd card write:");
-    //Serial.println(dataString);
+    Serial.println(dataString);
+    #endif
     myFile.print(dataString);
     myFile.flush();
 }
@@ -137,8 +154,10 @@ void logPString(PString dataString)
       Serial.println("No logging available");
       return;
     }
+    #if DEBUG
     Serial.println("Sd card write:");
     Serial.println(dataString);
+    #endif
     myFile.print(dataString);
     myFile.flush();
 }
@@ -182,22 +201,48 @@ void printDirectory(File dir, int numTabs) {
    }
 }
 
+void toneFinishedSetup()
+{
+  tone(3, 440);
+  delay(300);
+  noTone(3);
+  delay(300);
+  tone(3, 440);
+  delay(300);
+  tone(3, 440);
+  delay(300);
+  noTone(3);
+}
+void toneFinishedRFID()
+{
+  tone(3, 880);
+  delay(300);
+  noTone(3);
+  delay(300);
+  tone(3, 880);
+  delay(300);
+  noTone(3);
+}
+
 
 char lastWaypoint[20];
 char waypoint[20];
 char stopWaypoint[20];
 PString waypointHelper(waypoint, sizeof(waypoint));
-void tweetTag()
+int scanTweetTag()
 {
+  unsigned long adcStart = micros();
   char twitterDataBuf[161];
   PString tpost(twitterDataBuf, 161);
   int k;
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
-    return;
+    Serial.print("Am iesit print pula");
+    return 0;
   }
   // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) {
-    return;
+    Serial.print("Am iesit print penis");
+    return 0;
   }
   STARTED_FLAG = 1;
   // Dump debug info about the card; PICC_HaltA() is automatically called
@@ -237,7 +282,7 @@ void tweetTag()
     Serial.println(waypoint);
     Serial.println(lastWaypoint);
     pinMode(2, HIGH);
-    return;
+    return 1;
   }
   #if 0
   if(strcmp(waypoint, stopWaypoint)){
@@ -249,6 +294,9 @@ void tweetTag()
   #endif
   memcpy(lastWaypoint, waypoint, 20);
   tpost.print(waypoint);
+  Serial.print("rfid tine doar ");
+  Serial.println(micros() - adcStart);
+  toneFinishedRFID();
   Serial.print(F("RFID data: 0x"));
   tpost.print(" at ");/*
   Serial.print(F("RFID final bits: 0x"));
@@ -273,60 +321,259 @@ void tweetTag()
   tpost.println();
   logPString(tpost);
   pinMode(2, HIGH);
+  
+  Serial.print("twitter tine doar ");
+  Serial.println(micros() - adcStart);
+  
+  return 1;
 }
+
+unsigned long timeStamp[15];
+unsigned long timeout[15];
+bool at_treasure = false;
 
 void loop()
 {
-  if(STOP_FLAG)
+// BIODATA=    {"BodyTemp", "HeartRate", "NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
+  //{HR, accel, env temp & hum, body temp, consumotopn, Server, twitter,
+  //  RFID, stage2}
+  timeStamp[0] = timeStamp[1] = timeStamp[2] = 
+  timeStamp[3] = timeStamp[4] = timeStamp[5] = 
+  timeStamp[6] = timeStamp[7] = millis(); // timeStamp[8] is an exception
+  timeStamp[9] = 1500 + (timeStamp[10] = 1500 + (timeStamp[11] = 
+  1500 + (timeStamp[12] = 1500 + (timeStamp[13] = 1500 + (timeStamp[14] = timeStamp[5] + 1500)))));
+  timeout[0] = timeout[1] = 25; //FAST
+  timeout[2] = timeout[3] = timeout[4] = 5000;
+  timeout[5] = timeout[9] = timeout[10] = timeout[11] = timeout[12] = timeout[13] = timeout[14] = 10000;
+  timeout[6] = 60000;
+  timeout[7] = 1000;
+  timeout[8] = 15000;
+  pinMode(2, LOW);
+  while(1) {
+   if(STOP_FLAG)
     while(1);
-  tweetTag();
-  refreshData();
-  TreasureData();
-  if(! STARTED_FLAG)
-    return;
-  if(timeoutTweet())
-    tweetData();
-  if(timeoutServer())
-    dataToServer();
+      if(timeStamp[0] + timeout[0] <  millis()){
+         bioData[1] = readADC(HR);
+         //do smth XXX
+         timeStamp[0] = millis();
+         Serial.println("HR");
+         continue;
+      }
+      if(timeStamp[1] + timeout[1] <  millis()){
+         int x = readADC(X);
+         int y = readADC(Y);
+         int z = readADC(Z);
+         //do smth? Steps? Distance? XXX
+         static int THRESHOLD = 15;
+         const int UPRIGHT = 950;
+         const int INFATZA = 850;
+         int value = sqrt(x*x + y*y + z * z);
+         static unsigned long ms = millis();
+         // daca nu e pe langa UPRIGHT SI NICI pe langa INFATZA probabil e un step
+         // asteapta pana la resetare pe UPRIGHT
+         if( ms + 600 < millis() && 
+         (value - THRESHOLD > UPRIGHT || value + THRESHOLD < UPRIGHT)){
+           //if(!(value - THRESHOLD > INFATZA || value + THRESHOLD < INFATZA))
+           {
+                ms = millis();
+                if(STARTED_FLAG){
+                  bioData[2] +=1;
+                  bioData[3] +=0.41;
+                }
+                Serial.println("Crecă e un pas aici?");
+            }
+         }
+         Serial.println(value);
+         Serial.println("ACC");
+         timeStamp[1] = millis();
+         continue;
+      }
+      if(timeStamp[2] + timeout[2] <  millis()){
+         bioData[4] = htu.readTemperature();
+         bioData[5] = htu.readHumidity(); //XXX do the split read thing? :)
+         timeStamp[2] = millis();
+         Serial.println("temp hum");         
+         continue;
+      }
+      if(timeStamp[3] + timeout[3] <  millis()){
+         int z = readADC(TEMP);
+         timeStamp[3] = millis();
+         Serial.println("TEMP");         
+         continue;
+      }
+      if(timeStamp[4] + timeout[4] <  millis()){
+         float z = readADC(INA);
+         z = (z / 1024.0) * 3.3; //get voltage back
+         // 20 * value = volts -> volts = I * 0.2
+         // I = 100 * (ADC/3.3) A
+         bioData[6] = z / 4.0;  
+         timeStamp[4] = millis();
+         Serial.println("INA"); 
+         Serial.println(bioData[6]);        
+         continue;
+      }
+      if(timeStamp[5] + timeout[5] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(0);
+            Serial.println("Server");
+          }
+         timeStamp[5] = millis();
+         continue;
+      }
+      if(timeStamp[9] + timeout[9] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(1);
+            Serial.println("Server");
+          }
+         timeStamp[9] = millis();
+         continue;
+      }
+      if(timeStamp[10] + timeout[10] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(2);
+            Serial.println("Server");
+          }
+         timeStamp[10] = millis();
+         continue;
+      }
+      if(timeStamp[11] + timeout[11] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(3);
+            Serial.println("Server");
+          }
+         timeStamp[11] = millis();
+         continue;
+      }
+      if(timeStamp[12] + timeout[12] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(4);
+            Serial.println("Server");
+          }
+         timeStamp[12] = millis();
+         continue;
+      }
+      if(timeStamp[13] + timeout[13] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(5);
+            Serial.println("Server");
+          }
+         timeStamp[13] = millis();
+         continue;
+      }
+      if(timeStamp[14] + timeout[14] <  millis()){
+          if(STARTED_FLAG){
+            dataToServer(6);
+            Serial.println("Server");
+          }
+         timeStamp[14] = millis();
+         continue;
+      }
+      if(timeStamp[6] + timeout[6] <  millis()){
+          if(STARTED_FLAG){
+            tweetData();
+            Serial.println("Tweet");
+          }
+         timeStamp[6] = millis();
+         continue;
+      }
+      if (at_treasure && (timeStamp[8] + timeout[8] > millis())) {
+        TreasureData();
+        continue;
+      } else {
+        at_treasure = 0;
+      }
+      if(timeStamp[7] + timeout[7] <  millis()){
+         Serial.println("RFID");
+         at_treasure |= scanTweetTag();
+         timeStamp[7] = millis();
+         timeStamp[8] = millis(); //for timeout[8] seconds we have the sensors ON
+         treasures[0] = NOTHING;
+         treasures[1] = NOTHING;
+         continue;
+         
+      }
+    
+  }
 }
-int NOTHING = 1;
-int gauss ;
+
 void TreasureData()
 {
-  if(gauss < -550){
-//"GET","/putTreasure?time="+str(randint(0,100))+"&checkpoint="+str(randint(0,10))+"&value="+str(randint(-100,100))+"&name=dummy"
-   char treasureBuffer[200];
-   PString TreasureHelper(treasureBuffer, sizeof(treasureBuffer));
+   int toServer = 0; 
+   noTone(3);
+   tone(3, 660);
+   float celsius = 0;
+   celsius = mlx.getTemp();
+   //PRINTOUT?
+   noTone(3);
+   int static lastGauss = readADC(HALL);
+   tone(3, 440);
+   TreasureHelper.begin();
    TreasureHelper.print("GET /putTreasure?");
    TreasureHelper.print("time=");
    TreasureHelper.print(epoch);
    TreasureHelper.print("&checkpoint=");
    TreasureHelper.print(lastVisited);
-   TreasureHelper.print("&value=");
-   TreasureHelper.print(gauss);//HERE
-   TreasureHelper.print("&name=");
-   TreasureHelper.print("GAUSS");
-   singleDataToServer(&TreasureHelper);
+   gauss = readADC(HALL);
+   Serial.print("Gaussiana");
+   Serial.print(gauss);
+   Serial.print(" ");
+   Serial.println(lastGauss);
+   if(gauss - 50 > lastGauss || gauss +50 < lastGauss){
+     TreasureHelper.print("&value=");
+     TreasureHelper.print(gauss);
+     TreasureHelper.print("G&name=");
+     TreasureHelper.print("GAUSS");
+     toServer = 1;
+     if(treasures[0] == NOTHING) {
+       treasures[0] = GAUSS;
+     } else if(treasures[1] == NOTHING && treasures[0] != GAUSS) {
+       treasures[1] = GAUSS;
+     }
   }
+  static long unsigned timesl = millis();
+  if(timesl + 1000 < millis()){
+    lastGauss = gauss;
+    timesl = millis();
+  }
+  byte toggle=0;
+  byte address=0;
+  byte command=0;
+  noTone(3);
+  tone(3, 660);
+  unsigned long initialTime = micros();
+  while(1){
+    if(initialTime + 8*14000 < micros())
+    {
+      break;
+    }
+    if (rc5->read(&toggle, &address, &command))
+    {
+       Serial.println("in read");
+       TreasureHelper.print("&value=0x");
+       TreasureHelper.print(toggle, HEX);
+       TreasureHelper.print("0x");
+       TreasureHelper.print(address, HEX);
+       TreasureHelper.print("0x");
+       TreasureHelper.print(command, HEX);
+       TreasureHelper.print("&name=");
+       TreasureHelper.print("IR");
+       toServer = toggle || address || command;
+       if(treasures[0] == NOTHING) {
+         treasures[0] = IR;
+       } else if(treasures[1] == NOTHING && treasures[0] != IR) {
+         treasures[1] = IR;
+       }
+       break;
+    }
+  }
+  if(toServer){
+    singleDataToServer(&TreasureHelper, 9);
+  }
+  noTone(3);
+  Serial.print("Treasures are");
+  Serial.print(treasures[0]);
+  Serial.print(treasures[1]);
 }
-  
-int timeoutTweet()
-{
-  static unsigned long lastSent = 0;
-  int ret = lastSent + 60000 < millis();
-  if(ret)
-    lastSent = millis();
-  return ret;
-}
-int timeoutServer()
-{
-  static unsigned long lastSent = 0;
-  int ret = lastSent + 10000 < millis();
-  if(ret)
-    lastSent = millis();
-  return ret;
-}
-
 void tweetData()
 {
   char twitterDataBuf[161];
@@ -360,37 +607,38 @@ void tweetData()
   logPString(tpost);
 }
 
-void singleDataToServer(PString * req)
+void singleDataToServer(PString * req, int id)
 {
-   if (client.connect("randomtest.ngrok.io", 80)) { 
+        client[id].stop();
+  unsigned long adcStart = micros();
+   if (client[id].connect("randomtest.ngrok.io", 80)) { 
       req->println(" HTTP/1.1");
       req->println("Host: randomtest.ngrok.io");
       req->println("User-Agent: ArduinoWiFi/1.1");
       req->println("Connection: close");
       req->print("\n\n");
-      client.print(*req);
-      #if 1
+      client[id].print(*req);
       Serial.println(*req);
+      #if DEBUG
       while(client.available()){
 	char c = client.read();
             Serial.print(c);
       }
-      delay(300);
+      //delay(300);
       #endif
-      client.flush();
-      client.stop();
     } else {
       Serial.println("Can't connect to Server");
    }
    
+  Serial.print("ioana tine doar ");
+  Serial.println(micros() - adcStart);
   logPString(*req);
 }
-void dataToServer()
+char buffy[150];
+PString req(buffy, 150);
+void dataToServer(int k)
 {
   // Make a HTTP request:
-  char buffy[150];
-  PString req(buffy, 150);
-  for(int k = 0; k < 7; k++){
     req.begin();
     req.print("GET /put");
     req.print(bioDataName[k]);
@@ -399,11 +647,10 @@ void dataToServer()
     req.print("&time=");
     updateEpoch();
     req.print(epoch);
+    req.print("007");
     req.print("&value=");
     req.print(bioData[k]);
-    Serial.println(bioDataName[k]);
-    singleDataToServer(&req);
-  }
+    singleDataToServer(&req,k);
 }
 
 unsigned long NTPPart()
@@ -503,7 +750,8 @@ int readADC(int input)
    input == G ||
    input == B ||
    input == SONIC ||
-   input == INA){
+   input == INA ||
+   input == TEMP){
      setADCMux(input);
 //HERE
      ret = analogRead(A0);
@@ -521,41 +769,31 @@ int readADC(int input)
 int estimateGauss(int adc)
 {
    int ret;
-//   ret = (adc - 1024/3) * 3  - 1000;
+   //Serial.println(adc);
+//   ret = (adc - 1024/3) * 1  - 1000;
    ret = ((adc*3.3)/512.0 - 5.0 ) * 333.3;
-   Serial.println(ret);
-   return ret;
-}
+   //Serial.println(ret);
+   return adc;
+   //return ret;
+ }
 
-void refreshData()
-{
-    //{"BodyTemp", "HeartRate", " NumSteps", "Distance", "AirTemp", "Humidity", "Consumption" };
-    //for(int k = 0 ; k < 7; k++)
-    //  bioData[k] = readADC(k);
-    bioData[0] = 80.0 + (readADC(0)/100.00 - 15);
-    bioData[2] += 1;
-    bioData[3] += 0.41;
-    gauss = estimateGauss(readADC(HALL));
-    Serial.print("Temp: "); Serial.print(htu.readTemperature());
-    bioData[4] = htu.readTemperature();
-    Serial.print("\t\tHum: "); Serial.println(htu.readHumidity());
-    bioData[5] = htu.readHumidity();
-}
 void setADCMux(int input)
 {
-  if(input & 1)
+  digitalWrite(SA, (((uint8_t)input) & 1) != 0 ? HIGH : LOW);
+  digitalWrite(SB, (((uint8_t)input) & 2) != 0 ? HIGH : LOW);
+  digitalWrite(SC, (((uint8_t)input) & 4) != 0 ? HIGH : LOW);
+  //digitalWrite(MYS, (((uint8_t)input) & 4) != 0 ? HIGH : LOW);
+     return; 
+  //if (input == HALL) {
     digitalWrite(SA, HIGH);
-  else
-    digitalWrite(SA, LOW);
-  if(input & 2)
-    digitalWrite(SB, HIGH);
-  else
     digitalWrite(SB, LOW);
-  if(input & 4)
-    digitalWrite(SC, HIGH);
-  else
     digitalWrite(SC, LOW);
-
+  /* else {
+    digitalWrite(SA, LOW);
+    digitalWrite(SB, LOW);
+    digitalWrite(SC, LOW);
+  }*/
+  
 }  
 void ShowReaderDetails() {
   // Get the MFRC522 software version

@@ -4,6 +4,7 @@
 
 
 #define HR 0
+#define TEMP 8
 #define HALL 1
 #define MIC 2
 #define R 3

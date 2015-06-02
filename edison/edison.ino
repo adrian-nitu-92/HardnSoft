@@ -22,8 +22,8 @@ RC5 *rc5;
 #include "func.h"
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance
-Twitter twitter("740118787-yM38RvSRo1VWLGqJKa32dbzctr9EYmKLrOAn72Fh"); //@AdrianNitu92
-//Twitter twitter("3289784783-Pu57mOkeKTUzmvRekphPctsK9vfLGYj1BtZQYeO"); //Bucharest1HnS
+//Twitter twitter("740118787-yM38RvSRo1VWLGqJKa32dbzctr9EYmKLrOAn72Fh"); //@AdrianNitu92
+Twitter twitter("3289784783-Pu57mOkeKTUzmvRekphPctsK9vfLGYj1BtZQYeO"); //Bucharest1HnS
 // Initialize the client library
 WiFiClient client[10];
 File myFile;
@@ -31,9 +31,13 @@ File myFile;
 int port = 9000;  //HERE
 IPAddress server(192,168,1,132); 
 
-int status = WL_IDLE_STATUS;
+int status = WL_IDLE_STATUS;/*
 char ssid[] = "ALLVIEW V1_ViperS";  //  your network SSID (name) //HERE
 char pass[] = "freesxale";       // your network password
+*/
+char ssid[] = "pokemania";  //  your network SSID (name) //HERE
+char pass[] = "andrei123";       // your network password
+
 //char ssid[] = "Robolab2";  //  youFile myFile;r network SSID (name)
 //char pass[] = "W3<3R0bots";       // your network password
 int keyIndex = 0;            // your network key Index number (needed only for WEP)
@@ -233,12 +237,12 @@ int scanTweetTag()
   PString tpost(twitterDataBuf, 161);
   int k;
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
-    Serial.print("Am iesit print pula");
+    Serial.print("Am iesit print NO CARD");
     return 0;
   }
   // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) {
-    Serial.print("Am iesit print penis");
+    Serial.print("Am iesit print CANT READ");
     return 0;
   }
   STARTED_FLAG = 1;
@@ -282,6 +286,7 @@ if(! strcmp(waypoint, lastWaypoint)){
   Serial.println(lastWaypoint);
   pinMode(2, HIGH);
   return 1;
+  toneFinishedRFID();
 }
 #if 0
 if(strcmp(waypoint, stopWaypoint)){
@@ -341,7 +346,7 @@ void loop()
     timeStamp[6] = timeStamp[7] = millis(); // timeStamp[8] is an exception
   timeStamp[9] = 1500 + (timeStamp[10] = 1500 + (timeStamp[11] = 
         1500 + (timeStamp[12] = 1500 + (timeStamp[13] = 1500 + (timeStamp[14] = timeStamp[5] + 1500)))));
-  timeout[0] = timeout[1] = 25; //FAST
+  timeout[0] = timeout[1] = 2000; //FAST
   timeout[2] = timeout[3] = timeout[4] = 5000;
   timeout[5] = timeout[9] = timeout[10] = timeout[11] = timeout[12] = timeout[13] = timeout[14] = 10000;
   timeout[6] = 60000;
@@ -351,34 +356,40 @@ void loop()
   while(1) {
     if(STOP_FLAG)
       while(1);
-    if(timeStamp[0] + timeout[0] <  millis()){
-      int z = readADC(HR); //XXX
-      Serial.println(z);
-      static unsigned long peakStart = 0;
-      const int STATENULL = 0;
-      const int STATEHIGH = 1;
-      const int STATELOW = 2;
-      static int state = STATENULL;
-      const int HEARTTHRESHOLD = 420;
-      static unsigned long perioada = 750; //ms
-      if(z > HEARTTHRESHOLD){
-        if(state != STATEHIGH){
-          if(peakStart){
-            perioada = millis() - peakStart;
+    if(timeStamp[0] + timeout[0] <  millis()) {
+      pinMode(4, INPUT);
+      int val = digitalRead(4);
+      int newVal = 0;
+      int flag = 0;
+      int periodStart = 0;
+      int period = 0;
+      int start = millis();
+      while(1) {
+        if ((millis() - start) > 1000)
+          break;
+        newVal = digitalRead(4);
+        if ((val != newVal)) {
+          if (flag == 0) {
+            periodStart = millis();
+            val = newVal;
+            flag = 1;
+            continue;
+          } else {
+            period = millis() - periodStart;
+            if (period > 500) {
+              break;
+            }
+            val = newVal;
           }
-          peakStart = millis();
-          state = STATEHIGH;
         }
-      } else {
-        state = STATELOW;
       }
-      //check local peak
-      //get last peak time location
-      bioData[1] = 60.0 * (1000.0/perioada);
-      //do smth XXX
+      int bpm = 60.0 * (1000.0/period);
+      if ((bpm > 60) && (bpm < 140)) {
+         bioData[1] = bpm;
+         Serial.println("PULSE");
+         Serial.println(bioData[1]);
+      }
       timeStamp[0] = millis();
-      Serial.println("HR");
-      Serial.println(bioData[1]);
       continue;
     }
     if(timeStamp[1] + timeout[1] <  millis()){
@@ -415,10 +426,10 @@ void loop()
     }
     if(timeStamp[3] + timeout[3] <  millis()){
       int z = readADC(TEMP);
-      timeStamp[3] = millis();
-      Serial.println("TEMP");     
+      timeStamp[3] = millis();  
       float v = (z*3.3)/1024;
       bioData[0] = ((1.863-v))*(25.0/0.289);
+      Serial.println("TEMP");
       Serial.println(bioData[0]);          
       continue;
     }
@@ -441,7 +452,7 @@ void loop()
       treasures[0] = NOTHING;
       treasures[1] = NOTHING;
       if(at_treasure){
-        delay(5000);// we can do better...
+        delay(2000);// we can do better...
         TreasureData();
       }
       continue;
@@ -517,7 +528,7 @@ void TreasureData()
 {
   unsigned long start = micros();
   int lastGauss = readADC(HALL);
-  while(start + 5000000 > micros()){ //HERE
+  while(start + 20000000 > micros()){ //HERE
    // noTone(3);
    // tone(3, 440);
     float celsius = 20;
@@ -583,11 +594,68 @@ void TreasureData()
     {
       int red = readADC(R);
       int gre = readADC(G);
-      int blu = readADC(B);         
-      Serial.println("Leduri:");
-      Serial.println(red);
-      Serial.println(gre);
-      Serial.println(blu);
+      int blu = readADC(B);   
+      Serial.print("========================================> RGB: ");
+      Serial.print(red);Serial.print(" ");Serial.print(gre);Serial.print(" ");Serial.println(blu);
+     
+      int PRAG = 700;
+      
+      if(red < PRAG){
+        int lastRed = red;
+        int lastGre = gre;
+        int lastBlu = blu;
+        unsigned long rgbStart = millis();
+        while(1)
+        {
+          int counter = 0;
+           red = readADC(R);
+           gre = readADC(G);
+           blu = readADC(B);
+           if(gre < PRAG)  
+             counter ++;
+           if(lastGre < PRAG && (gre > PRAG))  
+             counter ++;           
+           if(counter >=2)
+             break;
+           if(rgbStart + 1000 < millis()) // daca au trecut 1000 milis de la start
+             break;
+         }
+        tone(3, 880);
+        TreasureHelper.begin();
+        TreasureHelper.print("GET /putTreasure?");
+        TreasureHelper.print("time=");
+        TreasureHelper.print(epoch);
+        TreasureHelper.print("&checkpoint=");
+        TreasureHelper.print(lastVisited);
+        TreasureHelper.print("&value=");
+        
+        if(gre < PRAG)
+            TreasureHelper.print("G");
+            /*
+        if(blu < PRAG)
+            TreasureHelper.print("B");
+        if(gre < PRAG)
+            TreasureHelper.print("G");
+        
+        TreasureHelper.print(millis() - rgbStart);
+        
+        if(lastRed < PRAG && (red > PRAG)) 
+            TreasureHelper.print("R");
+        if(lastBlu < PRAG && (blu > PRAG)) 
+            TreasureHelper.print("B");
+        if(lastGre < PRAG && (gre > PRAG)) 
+            TreasureHelper.print("G");
+        */
+        TreasureHelper.print("&name=");
+        TreasureHelper.print("RGB");
+        if(treasures[0] == NOTHING) {
+          treasures[0] = RGB;
+        } else if(treasures[1] == NOTHING && treasures[0] != RGB) {
+          treasures[1] = RGB;
+        }
+        singleDataToServer(&TreasureHelper, 9);
+        noTone(3);
+      }
     }
     {
       //sound
@@ -608,13 +676,14 @@ void TreasureData()
             zeroCount++;
         }
         proportion = zeroCount*10;
-        Serial.println("========> Stau aici ca pula ");
+        Serial.println("========> Stau aici ca CEVA ");
       }
       cat_tine = (millis() - start);
       Serial.print("====================> ultrasunet la ");
       Serial.println(cat_tine);
       if(cat_tine > 5 )
       {
+        tone(3, 330);
         TreasureHelper.begin();
         TreasureHelper.print("GET /putTreasure?");
         TreasureHelper.print("time=");
@@ -631,7 +700,7 @@ void TreasureData()
         } else if(treasures[1] == NOTHING && treasures[0] != ULTRASONIC) {
           treasures[1] = ULTRASONIC;
         }
-        
+        noTone(3);
       }
       
      
@@ -647,7 +716,7 @@ void TreasureData()
       }
       if (rc5->read(&toggle, &address, &command))
       {
-        tone(3, 200);
+        tone(3, 400);
         TreasureHelper.begin();
         TreasureHelper.print("GET /putTreasure?");
         TreasureHelper.print("time=");

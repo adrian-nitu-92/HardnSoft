@@ -8,8 +8,8 @@
 #define HALL 1
 #define MIC 2
 #define R 3
-#define G 4
-#define B 5
+#define G 5
+#define B 4
 #define SONIC 6
 #define INA 7
 
@@ -27,6 +27,7 @@
 #define IR  3
 #define TEMPERATURE 4
 #define ULTRASONIC 5
+#define RGB 5
 
 #define GAUSS_NORMAL_ADC 530
 #define GAUSS_NORMAL_VAL 131
